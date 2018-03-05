@@ -1,0 +1,175 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>班次维护</title>
+    <meta charset="utf-8" />
+    <script src="../Script/global.js"></script>
+    <link href="../Css/style.css" rel="stylesheet" />
+    <script src="../Script/jquery-1.4.2.min.js"></script>
+    <script src="../times/WdatePicker.js"></script>
+    <script type="text/javascript">
+        var sortfield = "";
+        var sorttype = "";
+        var saveflag = "";
+        function setsort(_sortfield) {
+            if (sortfield != _sortfield) {
+                sorttype = "asc";
+                sortfield = _sortfield;
+            }
+            else {
+                if (sorttype == "asc") {
+                    sorttype = "desc";
+                }
+                else {
+                    sorttype = "asc";
+                }
+            }
+            var currentpage = $("#hid_currentpage").val();
+            getPage(currentpage);
+        }
+        //跳转页面
+        function pagespress() {
+            var k = window.event.keyCode;
+            if ((k == 46) || (k == 8) || (k >= 48 && k <= 57) || (k >= 96 && k <= 105) || (k >= 37 && k <= 40)) {
+            }
+            else if (k == 13) {
+                var topage = $("#txt_topages").val();
+                if (topage != '0') {
+                    if (parseInt(topage, 10) > parseInt($("#hid_totalpage").val(), 10)) {
+                        topage = $("#hid_totalpage").val();
+                        $("#txt_topages").val(topage);
+                    }
+                    getPage(topage);
+                }
+            }
+            else {
+                window.event.returnValue = false;
+            }
+        }
+        //点击GO按钮进行翻页动作
+        function pagespressForGo() {
+            var topage = $("#txt_topages").val();
+            if (topage != '0') {
+                if (parseInt(topage, 10) > parseInt($("#hid_totalpage").val(), 10)) {
+                    topage = $("#hid_totalpage").val();
+                    $("#txt_topages").val(topage);
+                }
+                getPage(topage);
+            }
+        }
+        $(document).ready(function () {
+            getPage(1);
+        });
+        function getPage(currentpage) {
+            var pagesize = "10";
+            if ($("#sel_pagesize").val() != "" && typeof ($("#sel_pagesize").val()) != "undefined") { pagesize = $("#sel_pagesize").val(); }
+            var querydata = "&currentpage=" + currentpage + "&pagesize=" + pagesize + "&sortfield=" + sortfield + "&sorttype=" + sorttype;
+            $.ajax(
+            {
+                type: "GET",
+                url: "../MainHandler.ashx?action=getRecordPage_SchedualTime",
+                dataType: 'text',
+                data: encodeURI(querydata),
+                success: function (result) {
+                    $("#schedualTime_tb").html(result);
+                    //设置iframe高度
+                    var iframeHeight = $("#iframInfo", window.parent.document).contents().find("body").height();
+                    $("#iframInfo", window.parent.document).height(iframeHeight);
+                }
+            });
+        }
+        function AddSchedualTime() {
+            var schedualName = $("#schedualName").val();
+            if (schedualName == "") {
+                alert("请输入班次名称！");
+                return false;
+            }
+            var begin_a = $("#beginDate_a").val();
+            var end_a = $("#endDate_a").val();
+            var begin_b = $("#beginDate_b").val();
+            var end_b = $("#endDate_b").val();
+            if (begin_a == "" || (begin_a != "" && end_a == "")) {
+                alert("请输入完整的时间段1！");
+                return false;
+            }
+            if (begin_b != "" && end_b == "") {
+                alert("请输入完整的时间段2！");
+                return false;
+            }
+            var period = "";
+            if (begin_b == "") {
+                period = begin_a + "-" + end_a;
+            }
+            else {
+                period = begin_a + "-" + end_a + "/" + begin_b + "-" + end_b;
+            }
+            var querydata = "&schedualName=" + schedualName + "&schedual=" + period;
+            $.ajax(
+            {
+                type: "GET",
+                url: "../MainHandler.ashx?action=AddSchedualTime",
+                dataType: 'text',
+                data: encodeURI(querydata),
+                success: function (result) {
+                    if (result != null && result != "") {
+                        if (result == "exists") {
+                            alert("记录已重复，请重新添加！");
+                        }
+                        else if (parseInt(result) > 0) {
+                            alert("添加班次成功！");
+                            $("#schedualName").val("");
+                            $("#beginDate_a").val("");
+                            $("#endDate_a").val("");
+                            $("#beginDate_b").val("");
+                            $("#endDate_b").val("");
+                            getPage(1);
+                        }
+                        else {
+                            alert("添加班次异常，请重新添加！");
+                        }
+                    }
+                }
+            });
+        }
+        function DeleteSchedualTime(ID) {
+            var querydata = "&ID=" + ID;
+            $.ajax(
+            {
+                type: "GET",
+                url: "../MainHandler.ashx?action=DeleteSchedualTime",
+                dataType: 'text',
+                data: encodeURI(querydata),
+                success: function (result) {
+                    if (result != null && result != "") {
+                        if (parseInt(result) > 0) {
+                            alert("删除班次成功！");
+                            getPage(1);
+                        }
+                        else {
+                            alert("删除班次异常，请重新操作！");
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+</head>
+<body>
+    <fieldset>
+        <legend><span class="field_leg">班次维护</span></legend>
+        <div class="select_where">
+            <span>班次名称：</span>
+            <input type="text" id="schedualName" class="normalInput" />
+            <br /><br />
+            <span>时间段1：</span>
+            <input type="text" id="beginDate_a" class="Wdate width_100p" readonly="readonly" onclick="WdatePicker({ dateFmt: 'HH:mm' })" /><span class="ml_20 mr_20">至</span><input type="text" id="endDate_a" class="Wdate width_100p" readonly="readonly" onclick="WdatePicker({ dateFmt: 'HH:mm' })" />
+            <span class="ml_20">时间段2：</span>
+            <input type="text" id="beginDate_b" class="Wdate width_100p" readonly="readonly" onclick="WdatePicker({ dateFmt: 'HH:mm' })" /><span class="ml_20 mr_20">至</span><input type="text" id="endDate_b" class="Wdate width_100p" readonly="readonly" onclick="WdatePicker({ dateFmt: 'HH:mm' })" />
+            <span class="ml_50"><input class="saveBtn" type="button" value="添加" onclick="AddSchedualTime()" /></span>
+        </div>
+        <div id="schedualTime_tb">
+        </div>
+    </fieldset>
+</body>
+</html>

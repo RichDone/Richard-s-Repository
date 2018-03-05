@@ -1,0 +1,324 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>常见意外事故</title>
+    <meta charset="utf-8" />
+    <script src="../Script/global.js"></script>
+    <link href="../Css/style.css" rel="stylesheet" />
+    <script src="../Script/jquery-1.4.2.min.js"></script>
+    <script src="../times/WdatePicker.js"></script>
+    <script type="text/javascript">
+        $(function () {
+            InitAccidentType();
+            //设置iframe高度
+            var iframeHeight = $("#iframInfo", window.parent.document).contents().find("body").height();
+            $("#iframInfo", window.parent.document).height(iframeHeight);
+        })
+        function FindGuest() {
+            var input = $("#chooseGuest").val();
+            if (input == "") {
+                alert("请输入老人姓名！");
+                return false;
+            }
+            $("#chooseGuestList").empty();
+            var querydata = "&chooseGuest=" + input;
+            $.ajax(
+            {
+                type: "GET",
+                url: "../MainHandler.ashx?action=FindGuest",
+                dataType: 'json',
+                data: encodeURI(querydata),
+                success: function (result) {
+                    if (result != null && result != "" && result.length > 0) {
+                        if (result.length == 1) {
+                            var guestID = result[0].ID;
+                            var guestName = result[0].Name;
+                            var sex = result[0].Sex == "0" ? '男' : '女';
+                            var age = result[0].Age;
+                            var nurseLevel = result[0].NurseLevel;
+                            var room_bed_No = result[0].RoomNo + '-' + result[0].BedNo;
+                            $("#guestID").val(guestID);
+                            $("#room_bed_no").val(room_bed_No);
+                            $("#name").val(guestName);
+                            $("#sex").val(sex);
+                            $("#nurseLevel").val(nurseLevel);
+                            $("#age").val(age);
+                        }
+                        else {
+                            for (var i = 0; i < result.length; i++) {
+                                var guestID = result[i].ID;
+                                var guestName = result[i].Name;
+                                var sex = result[i].Sex == "0" ? '男' : '女';
+                                var age = result[i].Age;
+                                var nurseLevel = result[i].NurseLevel;
+                                var room_bed_No = result[i].RoomNo + '-' + result[i].BedNo;
+                                var li = $("<li guestID='" + guestID + "' guestName='" + guestName + "' sex='" + sex + "' age='" + age + "' nurseLevel='" + nurseLevel + "' room_bed_No='" + room_bed_No + "' onclick='FillGuestInfo(this)'>" + room_bed_No + guestName + "</li>");
+                                $("#chooseGuestList").append(li);
+                            }
+                        }
+                    }
+                    else {
+                        alert("未查询到数据！");
+                        return false;
+                    }
+                }
+            });
+        }
+        function FillGuestInfo(obj) {
+            var guestID = $(obj).attr("guestID");
+            var guestName = $(obj).attr("guestName");
+            var sex = $(obj).attr("sex");
+            var age = $(obj).attr("age");
+            var nurseLevel = $(obj).attr("nurseLevel");
+            var room_bed_No = $(obj).attr("room_bed_No");
+            $("#guestID").val(guestID);
+            $("#room_bed_no").val(room_bed_No);
+            $("#name").val(guestName);
+            $("#sex").val(sex);
+            $("#nurseLevel").val(nurseLevel);
+            $("#age").val(age);
+            $("#chooseGuestList").empty();
+        }
+        function AddAccident() {
+            var guestID = $("#guestID").val();
+            var createDate = $("#createDate").val();
+            var createTime = $("#createTime").val();
+            var accidentType = $("#accidentType").val();
+            var place = $("#place").val();
+            var condition = $("#condition").html();
+            var remark = $("#remark").html();
+            var relatedPerson = $("#relatedPerson").find(".choosedPerson");
+            var persons = [];
+            for (var i = 0; i < relatedPerson.length; i++) {
+                var staffNo = relatedPerson.eq(i).attr("staffNo");
+                var staffName = relatedPerson.eq(i).attr("staffName");
+                var person = {
+                    "AccidentID": 1,
+                    "StaffNo": staffNo,
+                    "StaffName": staffName
+                }
+                persons.push(person);
+            }
+            //验证非空
+            if (guestID == "") {
+                alert("请选择老人！");
+                return false;
+            }
+            if (createDate == "" || createTime == "") {
+                alert("请输入发生事件时间！");
+                return false;
+            }
+            if (accidentType == "") {
+                alert("请选择事件类型！");
+                return false;
+            }
+            if (condition != "") {
+                if (condition.indexOf("~") > -1 || condition.indexOf("*") > -1 ||
+                condition.indexOf("^") > -1 || condition.indexOf("$") > -1) {
+                    alert("伤情描述中不能包含\"~\"、\"*\"、\"^\"、\"$\"等特殊字符!");
+                    return false;
+                }
+            }
+            if (remark != "") {
+                if (remark.indexOf("~") > -1 || remark.indexOf("*") > -1 ||
+                remark.indexOf("^") > -1 || remark.indexOf("$") > -1) {
+                    alert("备注中不能包含\"~\"、\"*\"、\"^\"、\"$\"等特殊字符!");
+                    return false;
+                }
+            }
+            var querydata = "&relatedPerson=" + thistoString(persons) + "&guestID=" + guestID + "&accidentType=" + accidentType + "&createDate=" + createDate + "&createTime=" + createTime + "&place=" + place + "&condition=" + condition + "&remark=" + remark;
+            $.ajax(
+            {
+                type: "post",
+                url: "../MainHandler.ashx?action=AddAccident",
+                dataType: 'text',
+                data: encodeURI(querydata),
+                success: function (result) {
+                    if (result != null && result != "") {
+                        if (parseInt(result) > 0) {
+                            alert("事件记录成功！");
+                            window.parent.ChangeIframe('Accident');
+                        }
+                        else {
+                            alert("事件记录异常，请重新填写！");
+                        }
+                    }
+                }
+            });
+        }
+        function InitAccidentType() {
+            $("#accidentType").empty();
+            $.ajax(
+           {
+               type: "GET",
+               url: "../MainHandler.ashx?action=InitSelect_AccidentType",
+               dataType: 'text',
+               success: function (result) {
+                   if (result != null && result != "" && result.length > 0) {
+                       $("#accidentType").append(result);
+                   }
+               }
+           });
+        }
+        function ResetInput() {
+            $("#insert .normalInput").val('');
+            $("#insert #condition").html('');
+            $("#insert #remark").html('');
+            $("#insert #chooseGuestList").empty();
+        }
+        function FindStaff() {
+            var input = $("#chooseStaff").val();
+            if (input == "") {
+                alert("请输入员工姓名后填入！");
+                return false;
+            }
+            $("#chooseStaffList").empty();
+            var querydata = "&chooseStaff=" + input;
+            $.ajax(
+            {
+                type: "GET",
+                url: "../MainHandler.ashx?action=FindStaff",
+                dataType: 'json',
+                data: encodeURI(querydata),
+                success: function (result) {
+                    debugger;
+                    if (result != null && result != "" && result.length > 0) {
+                        if (result.length == 1) {
+                            var name = result[0].Name;
+                            var staffNo = result[0].StaffNo;
+                            var html = $("<span staffNo='" + staffNo + "' staffName='" + name + "' class='choosedPerson' onclick='RemoveStaffInfo(this)'>" + name + "<span class='span_close'>×</span></span>");
+                            var exists = ExistsStaff(staffNo);
+                            if (exists) {
+                                alert("填入重复数据");
+                                return;
+                            }
+                            else {
+                                $("#relatedPerson").append(html);
+                            }
+                        }
+                        else {
+                            for (var i = 0; i < result.length; i++) {
+                                var name = result[i].Name;
+                                var staffNo = result[i].StaffNo;
+                                var li = $("<li name='" + name + "' staffNo='" + staffNo + "' onclick='FillStaffInfo(this)'>" + staffNo + name + "</li>");
+                                $("#chooseStaffList").append(li);
+                            }
+                        }
+                    }
+                    else {
+                        alert("未查询到数据！");
+                        return false;
+                    }
+                }
+            });
+        }
+        function FillStaffInfo(obj) {
+            var name = $(obj).attr("name");
+            var staffNo = $(obj).attr("staffNo");
+            var html = $("<span staffNo='" + staffNo + "' staffName='" + name + "' class='choosedPerson' onclick='RemoveStaffInfo(this)'>" + name + "<span class='span_close'>×</span></span>");
+            var exists = ExistsStaff(staffNo);
+            if (exists) {
+                alert("填入重复数据");
+                return;
+            }
+            else {
+                $("#relatedPerson").append(html);
+            }
+            $("#chooseStaffList").empty();
+        }
+        function RemoveStaffInfo(obj) {
+            $(obj).remove();
+        }
+        function ExistsStaff(paramStaffNo) {
+            var relatedPerson = $("#relatedPerson").find(".choosedPerson");
+            for (var i = 0; i < relatedPerson.length; i++) {
+                var staffNo = relatedPerson.eq(i).attr("staffNo");
+                if (staffNo == paramStaffNo) {
+                    return true;
+                }
+            }
+            return false;
+        }
+        
+    </script>
+</head>
+<body>
+    <div id="insert">
+        <fieldset>
+            <legend><span class="field_leg">意外事件录入</span></legend>
+            <div>
+                <table class="insert_tb" cellpadding="5" cellspacing="5">
+                    <tr>
+                        <td class="font_weight">老人选择：</td>
+                        <td>
+                            <input type="text" id="chooseGuest" class="normalInput" />
+                            <ul class="choose_list" id="chooseGuestList"></ul>
+                        </td>
+                        <td>
+                            <input type="button" value="确认" class="confirmBtn" onclick="FindGuest()" />
+                        </td>
+                        <td>
+                            <input type="hidden" id="guestID" />
+                        </td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>床位号：</td>
+                        <td><input type="text" id="room_bed_no" class="normalInput" disabled="disabled" /></td>
+                        <td>姓名：</td>
+                        <td><input type="text" id="name" class="normalInput" disabled="disabled" /></td>
+                        <td>性别：</td>
+                        <td><input type="text" id="sex" class="normalInput" disabled="disabled" /></td>
+                    </tr>
+                    <tr>
+                        <td>护理等级：</td>
+                        <td><input type="text" id="nurseLevel" class="normalInput" disabled="disabled" /></td>
+                        <td>年龄：</td>
+                        <td><input type="text" id="age" class="normalInput" disabled="disabled" /></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>发生日期：</td>
+                        <td>
+                            <input type="text" id="createDate" class="Wdate" readonly="readonly" onclick="WdatePicker({ dateFmt: 'yyyy-MM-dd' })" />
+                        </td>
+                        <td>发生时间：</td>
+                        <td>
+                            <input type="text" id="createTime" class="Wdate" readonly="readonly" onclick="WdatePicker({ dateFmt: 'HH:mm' })" />
+                        </td>
+                        <td>地点：</td>
+                        <td><input type="text" id="place" class="normalInput" /></td>
+                    </tr>
+                    <tr>
+                        <td>事件类型：</td>
+                        <td>
+                            <select id="accidentType" class="normalSelect"></select>
+                        </td>
+                        <td>伤情：</td>
+                        <td colspan="3"><textarea id="condition" cols="40" rows="5"></textarea></td>
+                    </tr>
+                    <tr>
+                        <td>相关责任人：</td>
+                        <td>
+                            <div id="relatedPerson" class="relatedPerson"></div>
+                            <div class="mt_5">
+                                <input type="text" id="chooseStaff" class="normalInput" /><input type="button" value="填入" class="confirmBtn_s ml_5" onclick="FindStaff()" />
+                                <ul class="choose_list" id="chooseStaffList"></ul>
+                            </div>
+                        </td>
+                        <td>描述：</td>
+                        <td colspan="3"><textarea id="remark" cols="40" rows="5"></textarea></td>
+                    </tr>
+                </table>
+                <div class="footLineBtn">
+                    <input type="button" value="重置" class="saveBtn" onclick="ResetInput()" />
+                    <input type="button" value="保存" class="saveBtn" onclick="AddAccident()" />
+                </div>
+            </div>
+        </fieldset>
+    </div>
+</body>
+</html>

@@ -1,0 +1,271 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>添加排班</title>
+    <meta charset="utf-8" />
+    <script src="../Script/global.js"></script>
+    <link href="../Css/style.css" rel="stylesheet" />
+    <script src="../Script/jquery-1.4.2.min.js"></script>
+    <script src="../times/WdatePicker.js"></script>
+    <script type="text/javascript">
+        $(function () {
+            InitAllRoom();
+            InitStaff();
+            var beginDate = new Date().AddMonths(-1).ToString("yyyy-MM-dd");
+            var endDate = new Date().ToString("yyyy-MM-dd");
+            $("#beginDate").val(beginDate);
+            $("#endDate").val(endDate);
+        })
+        function AutoIframeHeight() {
+            //设置iframe高度
+            var iframeHeight = $("#iframInfo", window.parent.document).contents().find("body").height();
+            $("#iframInfo", window.parent.document).height(iframeHeight);
+        }
+        function InitAllRoom() {
+            $("#ul_Room").empty();
+            $.ajax({
+                type: "GET",
+                url: "../MainHandler.ashx?action=GetAllRoom",
+                dataType: 'json',
+                success: function (result) {
+                    if (result != null && result != "" && result.length > 0) {
+                        for (var i = 0; i < result.length; i++) {
+                            if (result[i].FloorID == 2 || result[i].FloorID == "2") {
+                                var li = $("<li><input type='checkbox' name='checkbox_room' value='" + result[i].RoomNo + "'/><span>" + result[i].RoomNo + "</span></li>");
+                                $("#ul_Room_two").append(li);
+                            }
+                            if (result[i].FloorID == 4 || result[i].FloorID == "4") {
+                                var li = $("<li><input type='checkbox' name='checkbox_room' value='" + result[i].RoomNo + "'/><span>" + result[i].RoomNo + "</span></li>");
+                                $("#ul_Room_four").append(li);
+                            }
+                            if (result[i].FloorID == 5 || result[i].FloorID == "5") {
+                                var li = $("<li><input type='checkbox' name='checkbox_room' value='" + result[i].RoomNo + "'/><span>" + result[i].RoomNo + "</span></li>");
+                                $("#ul_Room_five").append(li);
+                            }
+                        }
+                    }
+                    AutoIframeHeight();
+                }
+            });
+        }
+        function GetSchedualInfo() {
+            var beginDate = $("#beginDate").val();
+            var endDate = $("#endDate").val();
+            var staffNo = $("#staffNo").val();
+            var rooms = "";
+            $("input:checkbox[name='checkbox_room']:checked").each(function () {
+                rooms += $(this).val() + ",";
+            });
+            if (beginDate == "" || endDate == "") {
+                alert("请选择日期！");
+                return false;
+            }
+            $("#schedualInfo").html("");
+            var querydata = "&beginDate=" + beginDate + "&endDate=" + endDate
+                + "&rooms=" + rooms + "&staffNo=" + staffNo;
+            $.ajax({
+                type: "GET",
+                url: "../MainHandler.ashx?action=GetSchedualInfo",
+                dataType: 'text',
+                data: encodeURI(querydata),
+                success: function (result) {
+                    if (result != null && result != "" && result.length > 0) {
+                        $("#schedualInfo").html(result);
+                        $("#schedualInfo").addClass("scroll_x");
+                    }
+                    AutoIframeHeight();
+                }
+            });
+        }
+        function InitStaff() {
+            $("#staffNo").empty();
+            $.ajax(
+           {
+               type: "GET",
+               url: "../MainHandler.ashx?action=GetStaffInfoByLevel",
+               dataType: 'text',
+               success: function (result) {
+                   if (result != null && result != "" && result.length > 0) {
+                       $("#staffNo").append(result);
+                   }
+               }
+           });
+        }
+        function ChangeSchedual(obj) {
+            var txt = $(obj).html();
+            if (txt == "白") {
+                $(obj).html("夜");
+                $(obj).removeClass(GetClassByTxt("白"));
+                $(obj).addClass(GetClassByTxt("夜"));
+            }
+            if (txt == "夜") {
+                $(obj).html("两");
+                $(obj).removeClass(GetClassByTxt("夜"));
+                $(obj).addClass(GetClassByTxt("两"));
+            }
+            if (txt == "两") {
+                $(obj).html("洗澡");
+                $(obj).removeClass(GetClassByTxt("两"));
+                $(obj).addClass(GetClassByTxt("洗澡"));
+            }
+            if (txt == "洗澡") {
+                $(obj).html("打扫");
+                $(obj).removeClass(GetClassByTxt("洗澡"));
+                $(obj).addClass(GetClassByTxt("打扫"));
+            }
+            if (txt == "打扫") {
+                $(obj).html("休");
+                $(obj).removeClass(GetClassByTxt("打扫"));
+                $(obj).addClass(GetClassByTxt("休"));
+            }
+            if (txt == "休") {
+                $(obj).html("白");
+                $(obj).removeClass(GetClassByTxt("休"));
+                $(obj).addClass(GetClassByTxt("白"));
+            }
+        }
+        function GetClassByTxt(txt) {
+            var bdClass = "";
+            if (txt == "白") {
+                bdClass = "bg_white";
+            }
+            if (txt == "夜") {
+                bdClass = "bg_blue";
+            }
+            if (txt == "两") {
+                bdClass = "bg_green";
+            }
+            if (txt == "洗澡") {
+                bdClass = "bg_lithtred";
+            }
+            if (txt == "打扫") {
+                bdClass = "bg_purple";
+            }
+            return bdClass;
+        }
+        function AddSchedualInfo() {
+            Loading("请稍等几秒钟...");
+            var year = new Date().getFullYear();
+            var models = [];
+            var table = $("#schedualInfo").find("table").eq(0);
+            var trs = table.find("tr");
+            if (trs.length < 3) {
+                alert("无任何提交数据");
+                return false;
+            }
+            var tempRoomNo = "";
+            for (var i = 0; i < trs.length; i++) {
+                //获取DutyDate
+                var tr_0 = trs.eq(0);
+                if (i >= 2) {
+                    var tr = trs.eq(i);
+                    var tds = tr.find("td");
+                    for (var j = 0; j < tds.length; j++) {
+                        var flag = true;
+                        //获取房间号
+                        var roomNo = tds.eq(0).html();
+                        //获取员工工号
+                        var staffNo = "";
+                        if (isNaN(roomNo)) {
+                            flag = false;
+                        }
+                        if (flag == true) {
+                            tempRoomNo = roomNo;
+                            staffNo = tds.eq(1).find("span").eq(0).attr("staffNo");
+                            if (j >= 2) {
+                                //获取班次内容
+                                var schedual = tds.eq(j).html();
+                                var model = {
+                                    "StaffNo": staffNo,
+                                    "DutyDate": year + "-" + tr_0.find("th").eq(j - 1).html(),
+                                    "Schedual": schedual,
+                                    "RoomNo": roomNo
+                                }
+                                models.push(model);
+                            }
+                        }
+                        else {
+                            roomNo = tempRoomNo;
+                            staffNo = tds.eq(0).find("span").eq(0).attr("staffNo");
+                            if (j >= 1) {
+                                //获取班次内容
+                                var schedual = tds.eq(j).html();
+                                var model = {
+                                    "StaffNo": staffNo,
+                                    "DutyDate": year + "-" + tr_0.find("th").eq(j).html(),
+                                    "Schedual": schedual,
+                                    "RoomNo": roomNo
+                                }
+                                models.push(model);
+                            }
+                        }
+                    }
+                }
+            }
+            var querydata = "&listSchedual=" + thistoString(models);
+            $.ajax({
+                type: "post",
+                url: "../MainHandler.ashx?action=AddSchedualInfo",
+                dataType: 'text',
+                data: encodeURI(querydata),
+                success: function (result) {
+                    if (result != null && result != "") {
+                        if (parseInt(result) > 0) {
+                            alert("添加排班成功！");
+                            UnLoading();
+                            window.parent.ChangeIframe('Schedual');
+                        }
+                        else {
+                            alert("添加排班异常，请重新填写！");
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+</head>
+<body>
+    <div id="insert">
+        <fieldset>
+            <legend><span class="field_leg">排班信息</span></legend>
+            <div>
+                <table class="insert_tb">
+                    <tr>
+                        <td class="width_10 blod" align="right">日期选择：</td>
+                        <td class="width_90">
+                            <input type="text" id="beginDate" class="Wdate ml_40" readonly="readonly" onclick="WdatePicker({ dateFmt: 'yyyy-MM-dd' })" /><span class="ml_20 mr_20">至</span><input type="text" id="endDate" class="Wdate" readonly="readonly" onclick="WdatePicker({ dateFmt: 'yyyy-MM-dd' })" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="width_10 blod" align="right">房间选择：</td>
+                        <td class="width_90"><ul id="ul_Room_two" class="ul_hor"></ul></td>
+                    </tr>
+                    <tr>
+                        <td></td>
+                        <td><ul id="ul_Room_four" class="ul_hor"></ul></td>
+                    </tr>
+                    <tr>
+                        <td></td>
+                        <td><ul id="ul_Room_five" class="ul_hor"></ul></td>
+                    </tr>
+                    <tr>
+                        <td class="width_10 blod" align="right">护理员：</td>
+                        <td class="width_90">
+                            <select id="staffNo" class="normalSelect ml_40">
+                                <option value="">请选择护理员</option>
+                            </select>
+                            <input type="button" value="查询" class="confirmBtn ml_100" onclick="GetSchedualInfo()" />
+                        </td>
+                    </tr>
+                </table>
+                <div id="schedualInfo" class="mt_5 mb_20"></div>
+                <div class="footLineBtn">
+                    <input type="button" value="重置" class="saveBtn" onclick="GetSchedualInfo()" />
+                    <input type="button" value="保存" class="saveBtn" onclick="AddSchedualInfo()" />
+                </div>
+            </div>
+        </fieldset>
+    </div>
+</body>
+</html>

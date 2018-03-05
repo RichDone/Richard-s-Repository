@@ -1,0 +1,215 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>房间组合维护</title>
+    <meta charset="utf-8" />
+    <link href="../Css/style.css" rel="stylesheet" />
+    <script src="../Script/jquery-1.4.2.min.js"></script>
+    <script src="../times/WdatePicker.js"></script>
+    <script type="text/javascript">
+        var sortfield = "";
+        var sorttype = "";
+        var saveflag = "";
+        function setsort(_sortfield) {
+            if (sortfield != _sortfield) {
+                sorttype = "asc";
+                sortfield = _sortfield;
+            }
+            else {
+                if (sorttype == "asc") {
+                    sorttype = "desc";
+                }
+                else {
+                    sorttype = "asc";
+                }
+            }
+            var currentpage = $("#hid_currentpage").val();
+            getPage(currentpage);
+        }
+        //跳转页面
+        function pagespress() {
+            var k = window.event.keyCode;
+            if ((k == 46) || (k == 8) || (k >= 48 && k <= 57) || (k >= 96 && k <= 105) || (k >= 37 && k <= 40)) {
+            }
+            else if (k == 13) {
+                var topage = $("#txt_topages").val();
+                if (topage != '0') {
+                    if (parseInt(topage, 10) > parseInt($("#hid_totalpage").val(), 10)) {
+                        topage = $("#hid_totalpage").val();
+                        $("#txt_topages").val(topage);
+                    }
+                    getPage(topage);
+                }
+            }
+            else {
+                window.event.returnValue = false;
+            }
+        }
+        //点击GO按钮进行翻页动作
+        function pagespressForGo() {
+            var topage = $("#txt_topages").val();
+            if (topage != '0') {
+                if (parseInt(topage, 10) > parseInt($("#hid_totalpage").val(), 10)) {
+                    topage = $("#hid_totalpage").val();
+                    $("#txt_topages").val(topage);
+                }
+                getPage(topage);
+            }
+        }
+        $(document).ready(function () {
+            getPage(1);
+            InitAllRoom();
+        });
+        function getPage(currentpage) {
+            var pagesize = "10";
+            if ($("#sel_pagesize").val() != "" && typeof ($("#sel_pagesize").val()) != "undefined") { pagesize = $("#sel_pagesize").val(); }
+            var querydata = "&currentpage=" + currentpage + "&pagesize=" + pagesize + "&sortfield=" + sortfield + "&sorttype=" + sorttype;
+            $.ajax(
+            {
+                type: "GET",
+                url: "../MainHandler.ashx?action=getRecordPage_RoomCombine",
+                dataType: 'text',
+                data: encodeURI(querydata),
+                success: function (result) {
+                    $("#roomCombine_tb").html(result);
+                    //设置iframe高度
+                    var iframeHeight = $("#iframInfo", window.parent.document).contents().find("body").height();
+                    $("#iframInfo", window.parent.document).height(iframeHeight);
+                }
+            });
+        }
+        function AddRoomCombine() {
+            var roomList = "";
+            $("input:checkbox[name='checkbox_room']:checked").each(function () {
+                roomList += $(this).val() + ",";
+            });
+            if (roomList == "") {
+                alert("请选择房间号！");
+                UnLoading();
+                return false;
+            }
+            var querydata = "&roomList=" + roomList;
+            $.ajax(
+            {
+                type: "GET",
+                url: "../MainHandler.ashx?action=AddRoomCombine",
+                dataType: 'text',
+                data: encodeURI(querydata),
+                success: function (result) {
+                    if (result != null && result != "") {
+                        if (result == "exists") {
+                            alert("记录已重复，请重新添加！");
+                        }
+                        else if (parseInt(result) > 0) {
+                            alert("添加房间组合成功！");
+                            $("input:checkbox[name='checkbox_room']").each(function () {
+                                $(this).attr("checked", false);
+                            })
+                            getPage(1);
+                        }
+                        else {
+                            alert("添加房间组合异常，请重新添加！");
+                        }
+                    }
+                }
+            });
+        }
+        function DeleteRoomCombine(ID) {
+            var querydata = "&ID=" + ID;
+            $.ajax(
+            {
+                type: "GET",
+                url: "../MainHandler.ashx?action=DeleteRoomCombine",
+                dataType: 'text',
+                data: encodeURI(querydata),
+                success: function (result) {
+                    if (result != null && result != "") {
+                        if (parseInt(result) > 0) {
+                            alert("删除房间组合成功！");
+                            getPage(1);
+                        }
+                        else {
+                            alert("删除房间组合异常，请重新操作！");
+                        }
+                    }
+                }
+            });
+        }
+        function InitAllRoom(paramRooms) {
+            var roomList = [];
+            if (paramRooms) {
+                if (paramRooms.indexOf(",") > -1) {
+                    for (var i = 0; i < paramRooms.split(",").length; i++) {
+                        roomList.push(paramRooms.split(",")[i]);
+                    }
+                }
+            }
+            $("#ul_Room_two").empty();
+            $("#ul_Room_four").empty();
+            $("#ul_Room_five").empty();
+            $.ajax({
+                type: "GET",
+                url: "../MainHandler.ashx?action=GetAllRoom",
+                dataType: 'json',
+                success: function (result) {
+                    if (result != null && result != "" && result.length > 0) {
+                        for (var i = 0; i < result.length; i++) {
+                            var ifChecked = "";
+                            var roomNo = result[i].RoomNo;
+                            var peopleNum = result[i].PeopleNum;
+                            if (paramRooms && roomList.length > 0) {
+                                if ($.inArray(roomNo, roomList) != -1) {
+                                    ifChecked = "checked='checked'";
+                                }
+                            }
+                            if (result[i].FloorID == 2 || result[i].FloorID == "2") {
+                                var li = $("<li><input type='checkbox' " + ifChecked + " name='checkbox_room' value='" + roomNo + "'/><span>" + roomNo + "（" + peopleNum + "人）" + "</span></li>");
+                                $("#ul_Room_two").append(li);
+                            }
+                            if (result[i].FloorID == 4 || result[i].FloorID == "4") {
+                                var li = $("<li><input type='checkbox' " + ifChecked + " name='checkbox_room' value='" + roomNo + "'/><span>" + roomNo + "（" + peopleNum + "人）" + "</span></li>");
+                                $("#ul_Room_four").append(li);
+                            }
+                            if (result[i].FloorID == 5 || result[i].FloorID == "5") {
+                                var li = $("<li><input type='checkbox' " + ifChecked + " name='checkbox_room' value='" + roomNo + "'/><span>" + roomNo + "（" + peopleNum + "人）" + "</span></li>");
+                                $("#ul_Room_five").append(li);
+                            }
+                        }
+                    }
+                    AutoIframeHeight();
+                }
+            });
+        }
+        function AutoIframeHeight() {
+            //设置iframe高度
+            var iframeHeight = $("#iframInfo", window.parent.document).contents().find("body").height();
+            $("#iframInfo", window.parent.document).height(iframeHeight);
+        }
+    </script>
+</head>
+<body>
+    <fieldset>
+        <legend><span class="field_leg">房间组合维护</span></legend>
+        <div class="select_where">
+            <table class="insert_tb" cellpadding="5" cellspacing="5">
+                <tr>
+                    <td style="text-align:right">房间列表：</td>
+                    <td>
+                        <ul id="ul_Room_two" class="ul_hor"></ul>
+                        <div style="clear:both"></div>
+                        <ul id="ul_Room_four" class="ul_hor"></ul>
+                        <div style="clear:both"></div>
+                        <ul id="ul_Room_five" class="ul_hor"></ul>
+                    </td>
+                </tr>
+            </table>
+            <div class="footLineBtn" style="margin-top:0px">
+                <input type="button" value="添加组合" class="saveBtn" onclick="AddRoomCombine()" />
+            </div>
+        </div>
+        <div id="roomCombine_tb">
+        </div>
+    </fieldset>
+</body>
+</html>

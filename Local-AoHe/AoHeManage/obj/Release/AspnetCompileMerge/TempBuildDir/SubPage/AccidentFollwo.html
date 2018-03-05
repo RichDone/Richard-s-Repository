@@ -1,0 +1,161 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>意外事件跟踪</title>
+    <meta charset="utf-8" />
+    <script src="../Script/global.js"></script>
+    <link href="../Css/style.css" rel="stylesheet" />
+    <script src="../Script/jquery-1.4.2.min.js"></script>
+    <script src="../times/WdatePicker.js"></script>
+    <script type="text/javascript">
+        var sortfield = "";
+        var sorttype = "";
+        var saveflag = "";
+        function setsort(_sortfield) {
+            if (sortfield != _sortfield) {
+                sorttype = "asc";
+                sortfield = _sortfield;
+            }
+            else {
+                if (sorttype == "asc") {
+                    sorttype = "desc";
+                }
+                else {
+                    sorttype = "asc";
+                }
+            }
+            var currentpage = $("#hid_currentpage").val();
+            getPage(currentpage);
+        }
+        //跳转页面
+        function pagespress() {
+            var k = window.event.keyCode;
+            if ((k == 46) || (k == 8) || (k >= 48 && k <= 57) || (k >= 96 && k <= 105) || (k >= 37 && k <= 40)) {
+            }
+            else if (k == 13) {
+                var topage = $("#txt_topages").val();
+                if (topage != '0') {
+                    if (parseInt(topage, 10) > parseInt($("#hid_totalpage").val(), 10)) {
+                        topage = $("#hid_totalpage").val();
+                        $("#txt_topages").val(topage);
+                    }
+                    getPage(topage);
+                }
+            }
+            else {
+                window.event.returnValue = false;
+            }
+        }
+        //点击GO按钮进行翻页动作
+        function pagespressForGo() {
+            var topage = $("#txt_topages").val();
+            if (topage != '0') {
+                if (parseInt(topage, 10) > parseInt($("#hid_totalpage").val(), 10)) {
+                    topage = $("#hid_totalpage").val();
+                    $("#txt_topages").val(topage);
+                }
+                getPage(topage);
+            }
+        }
+        $(document).ready(function () {
+            getAccidentInfo();
+            var nowDate = new Date().ToString("yyyy-MM-dd");
+            $("#followTime").val(nowDate);
+        });
+        function getAccidentInfo() {
+            $.ajax(
+            {
+                type: "GET",
+                url: "../MainHandler.ashx?action=getAccidentInfoByWhere",
+                dataType: 'text',
+                success: function (result) {
+                    $("#accidentInfo_tb").html(result);
+                    var accidentID = $("#accidentInfo_tb").find("table tr").find("td").eq(0).html();
+                    $("#accidentID").val(accidentID);
+                    getPage(1);
+                }
+            });
+        }
+        function getPage(currentpage) {
+            var pagesize = "10";
+            var accidentID = $("#accidentID").val();
+            if ($("#sel_pagesize").val() != "" && typeof ($("#sel_pagesize").val()) != "undefined") { pagesize = $("#sel_pagesize").val(); }
+            var querydata = "&accidentID=" + accidentID + "&currentpage=" + currentpage + "&pagesize=" + pagesize + "&sortfield=" + sortfield + "&sorttype=" + sorttype;
+            $.ajax(
+            {
+                type: "GET",
+                url: "../MainHandler.ashx?action=getRecordPage_AccidentFollow",
+                dataType: 'text',
+                data: encodeURI(querydata),
+                success: function (result) {
+                    $("#accidentFollow_tb").html(result);
+                    //设置iframe高度
+                    var iframeHeight = $("#iframInfo", window.parent.document).contents().find("body").height();
+                    $("#iframInfo", window.parent.document).height(iframeHeight);
+                }
+            });
+        }
+        function AddAccidentFollow() {
+            var accidentID = $("#accidentID").val();
+            var followTime = $("#followTime").val();
+            var remark = $("#remark").html();
+            if (followTime == "") {
+                alert("请输入跟进时间！");
+                return false;
+            }
+            if (remark == "") {
+                alert("请输入跟进情况！");
+                return false;
+            }
+            if (remark != "") {
+                if (remark.indexOf("~") > -1 || remark.indexOf("*") > -1 ||
+                remark.indexOf("^") > -1 || remark.indexOf("$") > -1) {
+                    alert("跟进情况中不能包含\"~\"、\"*\"、\"^\"、\"$\"等特殊字符!");
+                    return false;
+                }
+            }
+            var querydata = "&accidentID=" + accidentID + "&followTime=" + followTime + "&remark=" + remark;
+            $.ajax(
+            {
+                type: "GET",
+                url: "../MainHandler.ashx?action=AddAccidentFollow",
+                dataType: 'text',
+                data: encodeURI(querydata),
+                success: function (result) {
+                    if (result != null && result != "") {
+                        if (parseInt(result) > 0) {
+                            alert("添加记录成功！");
+                            $("#remark").html("");
+                            getPage(1);
+                        }
+                        else {
+                            alert("添加记录异常，请重新添加！");
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+</head>
+<body>
+    <fieldset>
+        <legend><span class="field_leg">意外事件详情</span></legend>
+        <div id="accidentInfo_tb">
+        </div>
+    </fieldset>
+    <fieldset style="margin-top:10px;">
+        <legend><span class="field_leg">意外事件跟踪</span></legend>
+        <div class="select_where">
+            <input type="hidden" id="accidentID"/>
+            <span>跟进时间：</span>
+            <input type="text" id="followTime" class="Wdate" readonly="readonly" onclick="WdatePicker({ dateFmt: 'yyyy-MM-dd' })" />
+            <span class="ml_40">跟进情况：</span>
+            <textarea id="remark" cols="40" rows="4"></textarea>
+            <span class="ml_50"><input class="saveBtn" type="button" value="添加" onclick="AddAccidentFollow()" /></span>
+        </div>
+        <div id="accidentFollow_tb">
+        </div>
+    </fieldset>
+</body>
+</html>

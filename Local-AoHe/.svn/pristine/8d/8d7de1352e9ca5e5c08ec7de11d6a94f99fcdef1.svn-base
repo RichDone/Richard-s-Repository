@@ -1,0 +1,1121 @@
+﻿using AoHeManage.Common;
+using AoHeManage.Model;
+using MySql.Data.MySqlClient;
+using System;
+using System.Collections.Generic;
+using System.Data;
+using System.Data.SqlClient;
+using System.Linq;
+using System.Text;
+using System.Web;
+
+namespace AoHeManage.Dal
+{
+    public class AoHeDal
+    {
+        //public DataSet GetHotelList(string connectionString, int currentPage, int pageSize, string strWhere, string filedOrder)
+        //{
+
+        //    StringBuilder strSql = new StringBuilder();
+        //    strSql.Append(" select d.ParamName as OperateMode,a.* from (");
+        //    strSql.Append(" select  e.*,b.ParamName as Brand  ");
+        //    strSql.Append(" from Hotel  e left join dbo.ParamOption b  ");
+        //    strSql.Append(" on e.BrandCode = b.ParamOptionCode where b.ParamTypeCode='Brand' ) a ");
+        //    strSql.Append(" left join ParamOption d ");
+        //    strSql.Append(" on a.OperateModeCode = d.ParamOptionCode  ");
+        //    strSql.Append(" where d.ParamTypeCode='OperateMode' ");
+        //    if (strWhere.Trim() != "")
+        //    {
+        //        strSql.Append(strWhere);
+        //    }
+        //    if (filedOrder.Trim() != "")
+        //    {
+        //        strSql.Append(" order by " + filedOrder);
+        //    }
+        //    SqlParameter[] parameters = {
+        //            new SqlParameter("@sqlstr", SqlDbType.NVarChar,3500),
+        //            new SqlParameter("@currentpage", SqlDbType.Int),
+        //            new SqlParameter("@pagesize", SqlDbType.Int)
+        //            };
+        //    parameters[0].Value = strSql.ToString();
+        //    parameters[1].Value = currentPage;
+        //    parameters[2].Value = pageSize;
+        //    return DbHelperSQL.ExecuteDatasetPageShow(connectionString, parameters);
+        //}
+
+        #region 意外事件
+        public DataSet GetAccidentInfoList(int currentPage, int pageSize, string strWhere, string filedOrder)
+        {
+            //select * from table limit (start-1)*limit,limit; 其中start是页码，limit是每页显示的条数。
+            StringBuilder strSql = new StringBuilder();
+            //strSql.AppendLine(" set @totalrow=0; ");
+            //strSql.AppendLine(" set @totalpage=0; ");
+            //strSql.AppendLine(" select COUNT(1) into @totalrow from accidentinfo; ");
+            //strSql.AppendLine(" set @totalpage=ceiling(1.0*@totalrow/@pagesize); ");
+            //strSql.AppendLine(" select @totalrow as totalrow,@totalpage as totalpage; ");
+            strSql.AppendLine("  select COUNT(1) as totalrow from accidentinfo;  ");
+            strSql.AppendLine(" select a.AccidentID,b.RoomNo,b.BedNo,b.Name,b.Sex,b.Age,b.NurseLevel,a.CreateOn,c.AccidentTypeName,a.Place,a.Condition,a.Remark  ");
+            strSql.AppendLine(" from accidentinfo a ");
+            strSql.AppendLine(" left join guestinfo b on a.GuestID = b.ID ");
+            strSql.AppendFormat(" left join accidenttype c on a.accidenttype = c.AccidentTypeID ");
+            strSql.AppendFormat(" where 1=1 {0} ", strWhere);
+            if (filedOrder.Trim() != "")
+            {
+                strSql.Append(" order by " + filedOrder);
+            }
+            strSql.AppendFormat(" LIMIT {0},{1} ", (currentPage - 1) * pageSize, pageSize);
+
+            MySqlParameter[] parameters = {
+                        new MySqlParameter("@currentpage", MySqlDbType.Int16),
+                        new MySqlParameter("@pagesize", MySqlDbType.Int16)
+                        };
+            parameters[0].Value = currentPage;
+            parameters[1].Value = pageSize;
+
+            return DbHelperSQL.Query(strSql.ToString(), parameters);
+        }
+
+        public int AddAccident(Accident model)
+        {
+            List<String> sqlList = new List<string>();
+            StringBuilder strSql = new StringBuilder();
+            strSql.AppendLine(" insert into accidentinfo (AccidentID,GuestID,CreateOn,AccidentType,Place,`Condition`,Remark) values ");
+            strSql.AppendFormat(" (null,'{0}','{1}','{2}','{3}','{4}','{5}' ) ", model.GuestID, model.CreateOn, model.AccidentType, model.Place, model.Condition, model.Remark);
+            sqlList.Add(strSql.ToString());
+            strSql = new StringBuilder();
+            if (model.ListAccidentRelatedPerson != null && model.ListAccidentRelatedPerson.Count > 0)
+            {
+                foreach (var item in model.ListAccidentRelatedPerson)
+                {
+                    strSql.AppendLine(" insert into accidentrelatedperson (ID,AccidentID,StaffNo,StaffName) values ");
+                    strSql.AppendFormat(" (null,(select a.ID from (select MAX(AccidentID) as ID from accidentinfo) a),'{0}','{1}' ) ; ", item.StaffNo, item.StaffName);
+                }
+            }
+            sqlList.Add(strSql.ToString());
+            return DbHelperSQL.ExecuteSqlTran(sqlList);
+        }
+
+        public DataSet GetAccidentFollowList(int currentPage, int pageSize, string strWhere, string filedOrder)
+        {
+            StringBuilder strSql = new StringBuilder();
+            strSql.AppendLine("  select COUNT(1) as totalrow from accidentfollow;  ");
+            strSql.AppendLine(" select * from accidentfollow ");
+            strSql.AppendFormat(" where 1=1 {0} ", strWhere);
+            if (filedOrder.Trim() != "")
+            {
+                strSql.Append(" order by " + filedOrder);
+            }
+            strSql.AppendFormat(" LIMIT {0},{1} ", (currentPage - 1) * pageSize, pageSize);
+            MySqlParameter[] parameters = {
+                        new MySqlParameter("@currentpage", MySqlDbType.Int16),
+                        new MySqlParameter("@pagesize", MySqlDbType.Int16)
+                        };
+            parameters[0].Value = currentPage;
+            parameters[1].Value = pageSize;
+            return DbHelperSQL.Query(strSql.ToString(), parameters);
+        }
+
+        public int AddAccidentFollow(AccidentFollow model)
+        {
+            StringBuilder strSql = new StringBuilder();
+            strSql.AppendLine(" insert into accidentfollow(AccidentID,FollowTime,Remark) values ");
+            strSql.AppendFormat(" ('{0}','{1}','{2}' ) ", model.AccidentID, model.FollowTime, model.Remark);
+            return DbHelperSQL.ExecuteSql(strSql.ToString());
+        }
+
+        public DataSet GetAccidentInfoByWhere(string strWhere)
+        {
+            StringBuilder strSql = new StringBuilder();
+            strSql.AppendLine(" select a.AccidentID,b.RoomNo,b.BedNo,b.Name,b.Sex,b.Age,b.NurseLevel,a.CreateOn,c.AccidentTypeName,a.Place,a.Condition,a.Remark,d.StaffNo,d.StaffName  ");
+            strSql.AppendLine(" from accidentinfo a ");
+            strSql.AppendLine(" left join guestinfo b on a.GuestID = b.ID ");
+            strSql.AppendLine(" left join accidentrelatedperson d on a.AccidentID = d.AccidentID ");
+            strSql.AppendFormat(" left join accidenttype c on a.accidenttype = c.AccidentTypeID ");
+            strSql.AppendFormat(" where 1=1 {0} ", strWhere);
+            return DbHelperSQL.Query(strSql.ToString());
+        }
+
+        public DataSet GetAccidentStats(int currentPage, int pageSize, string strWhere, string filedOrder)
+        {
+            StringBuilder strSql = new StringBuilder();
+            strSql.AppendLine(" select count(1) as totalrow from ( ");
+            strSql.AppendLine(" select c.`Name`,c.Age,c.Sex,c.RoomNo,c.BedNo,b.AccidentTypeName,count(1) as OccurCount from accidentinfo a ");
+            strSql.AppendLine(" inner join accidenttype b on a.AccidentType = b.AccidentTypeID ");
+            strSql.AppendLine(" inner join guestinfo c on a.GuestID = c.ID ");
+            strSql.AppendLine(" group by c.`Name`,c.Age,c.Sex,c.RoomNo,c.BedNo,b.AccidentTypeName ) tempa; ");
+
+            strSql.AppendLine(" select c.`Name`,c.Age,c.Sex,c.RoomNo,c.BedNo,b.AccidentTypeName,count(1) as OccurCount from accidentinfo a ");
+            strSql.AppendLine(" inner join accidenttype b on a.AccidentType = b.AccidentTypeID ");
+            strSql.AppendLine(" inner join guestinfo c on a.GuestID = c.ID ");
+            strSql.AppendFormat(" where 1=1 {0} ", strWhere);
+            strSql.AppendLine(" group by c.`Name`,c.Age,c.Sex,c.RoomNo,c.BedNo,b.AccidentTypeName  ");
+
+            if (filedOrder.Trim() != "")
+            {
+                strSql.Append(" order by " + filedOrder);
+            }
+            strSql.AppendFormat(" LIMIT {0},{1} ", (currentPage - 1) * pageSize, pageSize);
+
+            MySqlParameter[] parameters = {
+                        new MySqlParameter("@currentpage", MySqlDbType.Int16),
+                        new MySqlParameter("@pagesize", MySqlDbType.Int16)
+                        };
+            parameters[0].Value = currentPage;
+            parameters[1].Value = pageSize;
+
+            return DbHelperSQL.Query(strSql.ToString(), parameters);
+        }
+
+        #endregion
+
+        #region 岗位信息
+        public DataSet GetPostInfo()
+        {
+            DataSet ds = new DataSet();
+            string strSql = "select * from postinfo";
+            ds = DbHelperSQL.Query(strSql);
+            return ds;
+        }
+        #endregion
+
+        #region 事故类型
+        public DataSet GetAccidentType()
+        {
+            DataSet ds = new DataSet();
+            string strSql = "select * from accidenttype";
+            ds = DbHelperSQL.Query(strSql);
+            return ds;
+        }
+        public DataSet GetAccidentTypeList(int currentPage, int pageSize, string strWhere, string filedOrder)
+        {
+            StringBuilder strSql = new StringBuilder();
+            strSql.AppendLine("  select COUNT(1) as totalrow from accidenttype;  ");
+            strSql.AppendLine(" select * from accidenttype ");
+            if (filedOrder.Trim() != "")
+            {
+                strSql.Append(" order by " + filedOrder);
+            }
+            strSql.AppendFormat(" LIMIT {0},{1} ", (currentPage - 1) * pageSize, pageSize);
+            MySqlParameter[] parameters = {
+                        new MySqlParameter("@currentpage", MySqlDbType.Int16),
+                        new MySqlParameter("@pagesize", MySqlDbType.Int16)
+                        };
+            parameters[0].Value = currentPage;
+            parameters[1].Value = pageSize;
+            return DbHelperSQL.Query(strSql.ToString(), parameters);
+        }
+
+        public int DeleteAccidentType(int accidentTypeID)
+        {
+            StringBuilder strSql = new StringBuilder();
+            strSql.AppendFormat(" delete from accidenttype where AccidentTypeID ='{0}' ", accidentTypeID);
+            return DbHelperSQL.ExecuteSql(strSql.ToString());
+        }
+
+        public int AddAccidentType(string accidentTypeName)
+        {
+            StringBuilder strSql = new StringBuilder();
+            strSql.AppendLine(" insert into accidenttype values ");
+            strSql.AppendFormat(" (null,'{0}' ) ", accidentTypeName);
+            return DbHelperSQL.ExecuteSql(strSql.ToString());
+        }
+
+        public bool ExistsAccidentType(string accidentTypeName)
+        {
+            StringBuilder strSql = new StringBuilder();
+            strSql.AppendFormat(" select count(1) from accidenttype where AccidentTypeName='{0}'", accidentTypeName);
+            return DbHelperSQL.Exists(strSql.ToString());
+        }
+        #endregion
+
+        #region 员工信息
+        public int AddStaff(Staff model)
+        {
+            StringBuilder strSql = new StringBuilder();
+            var leaveDate = model.LeaveDate == null ? "null" : ("'" + Convert.ToDateTime(model.LeaveDate).ToString("yyyy-MM-dd") + "'");
+            var hireDate = model.HireDate == null ? "null" : ("'" + Convert.ToDateTime(model.HireDate).ToString("yyyy-MM-dd") + "'");
+            var regularDate = model.RegularDate == null ? "null" : ("'" + Convert.ToDateTime(model.RegularDate).ToString("yyyy-MM-dd") + "'");
+            strSql.AppendFormat(" INSERT into staffinfo(ID,StaffNo,IDCardNo,Name,Sex,PostLevel,Status,LeaveDate,MasterStaffNo,HireDate,RegularDate) VALUES(null,'','{0}','{1}','{2}','{3}','{4}'," + leaveDate + ",'{5}'," + hireDate + "," + regularDate + ") ; ",
+                model.IDCardNo, model.Name, model.Sex, model.PostLevel, model.Status, model.MasterStaffNo);
+            //根据postlevel获取工号
+            string changeCode = model.PostLevel == 1 ? "A" : model.PostLevel == 2 ? "B" : model.PostLevel == 3 ? "C"
+                : model.PostLevel == 4 ? "D" : model.PostLevel == 5 ? "E" : model.PostLevel == 6 ? "F"
+                : model.PostLevel == 7 ? "G" : model.PostLevel == 8 ? "H" : model.PostLevel == 9 ? "I" : "J";
+            strSql.AppendFormat(" UPDATE staffinfo SET StaffNo=concat('" + changeCode + "','-',LPAD(ID,4,'0')) where ID in (select a.ID from (select MAX(ID) as ID from staffinfo) a) ");
+            return DbHelperSQL.ExecuteSql(strSql.ToString());
+        }
+
+        public int UpdateStaff(Staff model)
+        {
+            StringBuilder strSql = new StringBuilder();
+            strSql.AppendLine(" UPDATE staffinfo ");
+            strSql.AppendFormat(" SET Sex='{0}',PostLevel='{1}',Status='{2}',MasterStaffNo='{3}' ", model.Sex, model.PostLevel, model.Status, model.MasterStaffNo);
+            if (model.LeaveDate != null)
+            {
+                strSql.AppendFormat(" ,LeaveDate='{0}' ", model.LeaveDate);
+            }
+            if (model.HireDate != null)
+            {
+                strSql.AppendFormat(" ,HireDate='{0}' ", model.HireDate);
+            }
+            if (model.RegularDate != null)
+            {
+                strSql.AppendFormat(" ,RegularDate='{0}' ", model.RegularDate);
+            }
+            strSql.AppendFormat(" where ID='{0}' ", model.ID);
+            return DbHelperSQL.ExecuteSql(strSql.ToString());
+        }
+
+        public DataSet GetStaffInfoList(int currentPage, int pageSize, string strWhere, string filedOrder)
+        {
+            //select * from table limit (start-1)*limit,limit; 其中start是页码，limit是每页显示的条数。
+            StringBuilder strSql = new StringBuilder();
+            strSql.AppendLine("  select COUNT(1) as totalrow from staffinfo;  ");
+            strSql.AppendLine(" select a.*,b.PostName,c.Name as MasterStaffName from staffinfo a  ");
+            strSql.AppendLine(" inner join postinfo b on a.PostLevel=b.PostLevel ");
+            strSql.AppendLine(" left join staffinfo c on a.MasterStaffNo=c.StaffNo ");
+            strSql.AppendFormat(" where 1=1 {0} ", strWhere);
+            if (filedOrder.Trim() != "")
+            {
+                strSql.Append(" order by " + filedOrder);
+            }
+            strSql.AppendFormat(" LIMIT {0},{1} ", (currentPage - 1) * pageSize, pageSize);
+            MySqlParameter[] parameters = {
+                        new MySqlParameter("@currentpage", MySqlDbType.Int16),
+                        new MySqlParameter("@pagesize", MySqlDbType.Int16)
+                        };
+            parameters[0].Value = currentPage;
+            parameters[1].Value = pageSize;
+            return DbHelperSQL.Query(strSql.ToString(), parameters);
+        }
+
+        public Staff GetStaffInfoByID(int ID)
+        {
+            Staff model = new Staff();
+            string strSql = string.Format(" select * from staffinfo where ID ='{0}' ", ID);
+            DataSet ds = new DataSet();
+            ds = DbHelperSQL.Query(strSql);
+            if (ds.Tables.Count > 0 && ds.Tables[0].Rows.Count > 0)
+            {
+                var row = ds.Tables[0].Rows[0];
+                model.ID = ID;
+                model.StaffNo = row["StaffNo"].ToString();
+                model.IDCardNo = row["IDCardNo"].ToString();
+                model.MasterStaffNo = row["MasterStaffNo"].ToString();
+                model.Name = row["Name"].ToString();
+                model.Sex = Convert.ToInt16(row["Sex"]);
+                model.PostLevel = Convert.ToInt16(row["PostLevel"]);
+                model.Status = Convert.ToInt16(row["Status"]);
+                if (!string.IsNullOrWhiteSpace(row["LeaveDate"].ToString()))
+                {
+                    model.LeaveDate = Convert.ToDateTime(row["LeaveDate"]);
+                }
+                if (!string.IsNullOrWhiteSpace(row["HireDate"].ToString()))
+                {
+                    model.HireDate = Convert.ToDateTime(row["HireDate"]);
+                }
+                if (!string.IsNullOrWhiteSpace(row["RegularDate"].ToString()))
+                {
+                    model.RegularDate = Convert.ToDateTime(row["RegularDate"]);
+                }
+            }
+            return model;
+        }
+
+        public List<Staff> GetStaffInfoByName(string name)
+        {
+            List<Staff> listStaff = new List<Staff>();
+            StringBuilder strSql = new StringBuilder();
+            strSql.AppendLine(" select a.*,b.PostName from staffinfo a  ");
+            strSql.AppendLine(" inner join postinfo b on a.PostLevel=b.PostLevel ");
+            strSql.AppendFormat(" where Name like '%{0}%' ", name);
+            DataSet ds = new DataSet();
+            ds = DbHelperSQL.Query(strSql.ToString());
+            if (ds.Tables.Count > 0 && ds.Tables[0].Rows.Count > 0)
+            {
+                for (int i = 0; i < ds.Tables[0].Rows.Count; i++)
+                {
+                    var ID = ds.Tables[0].Rows[i]["ID"];
+                    var staffName = ds.Tables[0].Rows[i]["Name"];
+                    var staffNo = ds.Tables[0].Rows[i]["StaffNo"];
+                    var IDCardNo = ds.Tables[0].Rows[i]["IDCardNo"];
+                    var sex = ds.Tables[0].Rows[i]["Sex"];
+                    var postName = ds.Tables[0].Rows[i]["PostName"];
+                    listStaff.Add(new Staff()
+                    {
+                        ID = Convert.ToInt16(ID),
+                        Name = staffName.ToString(),
+                        Sex = Convert.ToInt16(sex),
+                        PostName = postName.ToString(),
+                        StaffNo = staffNo.ToString(),
+                        IDCardNo = IDCardNo.ToString()
+                    });
+                }
+            }
+            return listStaff;
+        }
+
+        public DataSet GetStaffInfoByLevel(string level)
+        {
+            DataSet ds = new DataSet();
+            string strSql = string.Empty;
+            if (string.IsNullOrWhiteSpace(level))
+            {
+                strSql = "select StaffNo,Name,MasterStaffNo,Status from staffinfo where Status <>'2'";
+            }
+            else
+            {
+                strSql = "select StaffNo,Name,MasterStaffNo,Status from staffinfo where  Status <>'2' and PostLevel='" + level + "'";
+            }
+            ds = DbHelperSQL.Query(strSql);
+            return ds;
+        }
+
+        public DataSet GetStaffInfo()
+        {
+            DataSet ds = new DataSet();
+            string strSql = "select StaffNo,Name from staffinfo ";
+            ds = DbHelperSQL.Query(strSql);
+            return ds;
+        }
+
+        #endregion
+
+        #region 客人信息
+        public DataSet GetGuestInfoList(int currentPage, int pageSize, string strWhere, string filedOrder)
+        {
+            //select * from table limit (start-1)*limit,limit; 其中start是页码，limit是每页显示的条数。
+            StringBuilder strSql = new StringBuilder();
+            strSql.AppendFormat("  select COUNT(1) as totalrow from guestinfo where 1=1 {0} ;  ", strWhere);
+            strSql.AppendLine(" select a.* from guestinfo a  ");
+            strSql.AppendFormat(" where 1=1 {0} ", strWhere);
+            if (filedOrder.Trim() != "")
+            {
+                strSql.Append(" order by " + filedOrder);
+            }
+            strSql.AppendFormat(" LIMIT {0},{1} ", (currentPage - 1) * pageSize, pageSize);
+            MySqlParameter[] parameters = {
+                        new MySqlParameter("@currentpage", MySqlDbType.Int16),
+                        new MySqlParameter("@pagesize", MySqlDbType.Int16)
+                        };
+            parameters[0].Value = currentPage;
+            parameters[1].Value = pageSize;
+            return DbHelperSQL.Query(strSql.ToString(), parameters);
+        }
+
+        public int AddGuest(Guest model)
+        {
+            StringBuilder strSql = new StringBuilder();
+            var leaveDate = model.LeaveDate == null ? "null" : ("'" + Convert.ToDateTime(model.LeaveDate).ToString("yyyy-MM-dd") + "'");
+            var changeLevelDate = model.ChangeLevelDate == null ? "null" : ("'" + Convert.ToDateTime(model.ChangeLevelDate).ToString("yyyy-MM-dd") + "'");
+
+            strSql.AppendLine(" insert into guestinfo(ID,Name,Sex,Age,NurseLevel,RoomNo,BedNo,IDCardNo,AdmissionDate,LeaveDate,Status,ChangeLevelDate,Remark) values ");
+            strSql.AppendFormat(" (null,'{0}','{1}','{2}','{3}','{4}','{5}','{6}','{7}'," + leaveDate + ",'{8}'," + changeLevelDate + ",'{9}' ) ",
+                model.Name, model.Sex, model.Age, model.NurseLevel, model.RoomNo, model.BedNo, model.IDCardNo,
+                model.AdmissionDate, model.Status, model.Remark);
+            return DbHelperSQL.ExecuteSql(strSql.ToString());
+        }
+
+        public int UpdateGuest(Guest model)
+        {
+            StringBuilder strSql = new StringBuilder();
+            strSql.AppendLine(" update guestinfo ");
+            strSql.AppendFormat("  set Sex='{0}',Age='{1}',NurseLevel='{2}',RoomNo='{3}',BedNo='{4}',AdmissionDate='{5}',Remark='{6}',Status='{7}' ",
+                model.Sex, model.Age, model.NurseLevel, model.RoomNo, model.BedNo, model.AdmissionDate, model.Remark, model.Status);
+            if (model.ChangeLevelDate != null)
+            {
+                strSql.AppendFormat("  ,ChangeLevelDate='{0}' ", model.ChangeLevelDate);
+            }
+            if (model.LeaveDate != null)
+            {
+                strSql.AppendFormat("  ,LeaveDate='{0}' ", model.LeaveDate);
+            }
+            strSql.AppendFormat(" where ID='{0}' ", model.ID);
+            return DbHelperSQL.ExecuteSql(strSql.ToString());
+        }
+        public Guest GetGuestInfoByID(int ID)
+        {
+            Guest model = new Guest();
+            string strSql = string.Format(" select * from guestinfo where ID ='{0}' ", ID);
+            DataSet ds = new DataSet();
+            ds = DbHelperSQL.Query(strSql);
+            if (ds.Tables.Count > 0 && ds.Tables[0].Rows.Count > 0)
+            {
+                var row = ds.Tables[0].Rows[0];
+                model.ID = ID;
+                model.Name = row["Name"].ToString();
+                model.Sex = Convert.ToInt16(row["Sex"]);
+                model.Age = Convert.ToInt16(row["Age"]);
+                model.NurseLevel = row["NurseLevel"].ToString();
+                model.RoomNo = row["RoomNo"].ToString();
+                model.BedNo = row["BedNo"].ToString();
+                model.IDCardNo = row["IDCardNo"].ToString();
+                model.AdmissionDate = Convert.ToDateTime(row["AdmissionDate"]);
+                if (!string.IsNullOrWhiteSpace(row["LeaveDate"].ToString()))
+                {
+                    model.LeaveDate = Convert.ToDateTime(row["LeaveDate"]);
+                }
+                if (!string.IsNullOrWhiteSpace(row["ChangeLevelDate"].ToString()))
+                {
+                    model.ChangeLevelDate = Convert.ToDateTime(row["ChangeLevelDate"]);
+                }
+                model.Status = Convert.ToInt16(row["Status"]);
+                model.Remark = row["Remark"].ToString();
+            }
+            return model;
+        }
+
+        public List<Guest> GetGuestInfoByName(string name)
+        {
+            List<Guest> listGuest = new List<Guest>();
+            string strSql = string.Format(" select * from guestinfo where Name like '%{0}%' ", name);
+            DataSet ds = new DataSet();
+            ds = DbHelperSQL.Query(strSql);
+            if (ds.Tables.Count > 0 && ds.Tables[0].Rows.Count > 0)
+            {
+                for (int i = 0; i < ds.Tables[0].Rows.Count; i++)
+                {
+                    var guestID = ds.Tables[0].Rows[i]["ID"];
+                    var guestName = ds.Tables[0].Rows[i]["Name"];
+                    var sex = ds.Tables[0].Rows[i]["Sex"];
+                    var age = ds.Tables[0].Rows[i]["Age"];
+                    var nurseLevel = ds.Tables[0].Rows[i]["NurseLevel"];
+                    var roomNo = ds.Tables[0].Rows[i]["RoomNo"];
+                    var bedNo = ds.Tables[0].Rows[i]["BedNo"];
+                    var admissionDate = ds.Tables[0].Rows[i]["AdmissionDate"];
+                    listGuest.Add(new Guest()
+                    {
+                        ID = Convert.ToInt16(guestID),
+                        Name = guestName.ToString(),
+                        Sex = Convert.ToInt16(sex),
+                        Age = Convert.ToInt16(age),
+                        NurseLevel = nurseLevel.ToString(),
+                        RoomNo = roomNo.ToString(),
+                        BedNo = bedNo.ToString(),
+                        AdmissionDate = Convert.ToDateTime(admissionDate)
+                    });
+                }
+            }
+            return listGuest;
+        }
+        #endregion
+
+        #region 老人问题类型
+        public DataSet GetDailyRecordType()
+        {
+            DataSet ds = new DataSet();
+            string strSql = "select * from dailyrecordtype";
+            ds = DbHelperSQL.Query(strSql);
+            return ds;
+        }
+        public DataSet GetDailyRecordTypeList(int currentPage, int pageSize, string strWhere, string filedOrder)
+        {
+            StringBuilder strSql = new StringBuilder();
+            strSql.AppendLine("  select COUNT(1) as totalrow from dailyrecordtype;  ");
+            strSql.AppendLine(" select * from dailyrecordtype ");
+            if (filedOrder.Trim() != "")
+            {
+                strSql.Append(" order by " + filedOrder);
+            }
+            strSql.AppendFormat(" LIMIT {0},{1} ", (currentPage - 1) * pageSize, pageSize);
+            MySqlParameter[] parameters = {
+                        new MySqlParameter("@currentpage", MySqlDbType.Int16),
+                        new MySqlParameter("@pagesize", MySqlDbType.Int16)
+                        };
+            parameters[0].Value = currentPage;
+            parameters[1].Value = pageSize;
+            return DbHelperSQL.Query(strSql.ToString(), parameters);
+        }
+
+        public int DeleteDailyRecordType(int dailyRecordTypeID)
+        {
+            StringBuilder strSql = new StringBuilder();
+            strSql.AppendFormat(" delete from dailyrecordtype where DailyRecordTypeID ='{0}' ", dailyRecordTypeID);
+            return DbHelperSQL.ExecuteSql(strSql.ToString());
+        }
+
+        public int AddDailyRecordType(string dailyRecordTypeName)
+        {
+            StringBuilder strSql = new StringBuilder();
+            strSql.AppendLine(" insert into dailyrecordtype values ");
+            strSql.AppendFormat(" (null,'{0}' ) ", dailyRecordTypeName);
+            return DbHelperSQL.ExecuteSql(strSql.ToString());
+        }
+
+        public bool ExistsDailyRecordType(string dailyRecordTypeName)
+        {
+            StringBuilder strSql = new StringBuilder();
+            strSql.AppendFormat(" select count(1) from dailyrecordtype where DailyRecordTypeName='{0}'", dailyRecordTypeName);
+            return DbHelperSQL.Exists(strSql.ToString());
+        }
+        #endregion
+
+        #region 日常记录
+        public DataSet GetDailyRecordInfoList(int currentPage, int pageSize, string strWhere, string filedOrder)
+        {
+            //select * from table limit (start-1)*limit,limit; 其中start是页码，limit是每页显示的条数。
+            StringBuilder strSql = new StringBuilder();
+            strSql.AppendLine("  select COUNT(1) as totalrow from(  ");
+            strSql.AppendLine(" select a.DailyRecordID,b.RoomNo,b.BedNo,b.Name,a.CreateOn,c.DailyRecordTypeName,a.Remark,a.ReportPerson,d.Name as StaffName from dailyrecordinfo a  ");
+            strSql.AppendLine(" left join guestinfo b on a.GuestID = b.ID ");
+            strSql.AppendLine(" left join dailyrecordtype c on a.DailyRecordType = c.DailyRecordTypeID ");
+            strSql.AppendLine(" left join staffinfo d on a.ReportPerson = d.StaffNo ");
+            strSql.AppendFormat(" where 1=1 {0} ) tempfortotal;", strWhere);
+            
+            strSql.AppendLine(" select a.DailyRecordID,b.RoomNo,b.BedNo,b.Name,a.CreateOn,c.DailyRecordTypeName,a.Remark,a.ReportPerson,d.Name as StaffName from dailyrecordinfo a  ");
+            strSql.AppendLine(" left join guestinfo b on a.GuestID = b.ID ");
+            strSql.AppendLine(" left join dailyrecordtype c on a.DailyRecordType = c.DailyRecordTypeID ");
+            strSql.AppendLine(" left join staffinfo d on a.ReportPerson = d.StaffNo ");
+            strSql.AppendFormat(" where 1=1 {0} ", strWhere);
+            if (filedOrder.Trim() != "")
+            {
+                strSql.Append(" order by " + filedOrder);
+            }
+            strSql.AppendFormat(" LIMIT {0},{1} ", (currentPage - 1) * pageSize, pageSize);
+            MySqlParameter[] parameters = {
+                        new MySqlParameter("@currentpage", MySqlDbType.Int16),
+                        new MySqlParameter("@pagesize", MySqlDbType.Int16)
+                        };
+            parameters[0].Value = currentPage;
+            parameters[1].Value = pageSize;
+            return DbHelperSQL.Query(strSql.ToString(), parameters);
+        }
+
+        public int AddDailyRecord(DailyRecord model)
+        {
+            StringBuilder strSql = new StringBuilder();
+            strSql.AppendLine(" insert into dailyrecordinfo (DailyRecordID,DailyRecordType,GuestID,Remark,CreateOn,ReportPerson) values ");
+            strSql.AppendFormat(" (null,'{0}','{1}','{2}','{3}','{4}') ", model.DailyRecordType, model.GuestID, model.Remark, model.CreateOn, model.ReportPerson);
+            return DbHelperSQL.ExecuteSql(strSql.ToString());
+        }
+
+        public DataSet GetDailyRecordStats(int currentPage, int pageSize, string strWhere, string filedOrder)
+        {
+            StringBuilder strSql = new StringBuilder();
+            strSql.AppendLine(" select count(1) as totalrow from ( ");
+            strSql.AppendLine(" select c.`Name`,c.Sex,c.Age,c.RoomNo,c.BedNo,b.DailyRecordTypeName,count(1) as OccurCount from dailyrecordinfo a ");
+            strSql.AppendLine(" inner join dailyrecordtype b on a.DailyRecordType = b.DailyRecordTypeID ");
+            strSql.AppendLine(" inner join guestinfo c on a.GuestID = c.ID ");
+            strSql.AppendFormat(" where 1=1 {0} ", strWhere);
+            strSql.AppendLine(" group by c.`Name`,c.Sex,c.Age,c.RoomNo,c.BedNo,b.DailyRecordTypeName ) tempa; ");
+
+            strSql.AppendLine(" select c.`Name`,c.Sex,c.Age,c.RoomNo,c.BedNo,b.DailyRecordTypeName,count(1) as OccurCount from dailyrecordinfo a ");
+            strSql.AppendLine(" inner join dailyrecordtype b on a.DailyRecordType = b.DailyRecordTypeID ");
+            strSql.AppendLine(" inner join guestinfo c on a.GuestID = c.ID ");
+            strSql.AppendFormat(" where 1=1 {0} ", strWhere);
+            strSql.AppendLine(" group by c.`Name`,c.Sex,c.Age,c.RoomNo,c.BedNo,b.DailyRecordTypeName  ");
+
+            if (filedOrder.Trim() != "")
+            {
+                strSql.Append(" order by " + filedOrder);
+            }
+            strSql.AppendFormat(" LIMIT {0},{1} ", (currentPage - 1) * pageSize, pageSize);
+
+            MySqlParameter[] parameters = {
+                        new MySqlParameter("@currentpage", MySqlDbType.Int16),
+                        new MySqlParameter("@pagesize", MySqlDbType.Int16)
+                        };
+            parameters[0].Value = currentPage;
+            parameters[1].Value = pageSize;
+
+            return DbHelperSQL.Query(strSql.ToString(), parameters);
+        }
+        #endregion
+
+        #region 员工考评
+        public DataSet GetStaffEvaluateInfoList(int currentPage, int pageSize, string strWhere, string filedOrder)
+        {
+            //select * from table limit (start-1)*limit,limit; 其中start是页码，limit是每页显示的条数。
+            StringBuilder strSql = new StringBuilder();
+            strSql.AppendLine("  select COUNT(1) as totalrow from staffevaluate;  ");
+            strSql.AppendLine(" select a.*,b.Name from staffevaluate a  ");
+            strSql.AppendLine(" inner join staffinfo b on a.StaffNo = b.StaffNo ");
+            strSql.AppendFormat(" where 1=1 {0} ", strWhere);
+            if (filedOrder.Trim() != "")
+            {
+                strSql.Append(" order by " + filedOrder);
+            }
+            strSql.AppendFormat(" LIMIT {0},{1} ", (currentPage - 1) * pageSize, pageSize);
+            MySqlParameter[] parameters = {
+                        new MySqlParameter("@currentpage", MySqlDbType.Int16),
+                        new MySqlParameter("@pagesize", MySqlDbType.Int16)
+                        };
+            parameters[0].Value = currentPage;
+            parameters[1].Value = pageSize;
+            return DbHelperSQL.Query(strSql.ToString(), parameters);
+        }
+
+        public int AddStaffEvaluate(StaffEvaluate model)
+        {
+            StringBuilder strSql = new StringBuilder();
+            strSql.AppendLine(" insert into staffevaluate (StaffEvaluateID,StaffNo,EvaluateType,CreateOn,Remark) values ");
+            strSql.AppendFormat(" (null,'{0}','{1}','{2}','{3}') ", model.StaffNo, model.EvaluateType, model.CreateOn, model.Remark);
+            return DbHelperSQL.ExecuteSql(strSql.ToString());
+        }
+        #endregion
+
+        #region 房间
+        public DataSet GetAllRoom()
+        {
+            DataSet ds = new DataSet();
+            string strSql = "select a.*,(select COUNT(1) from guestinfo where RoomNo = a.RoomNo ) as PeopleNum from room a";
+            ds = DbHelperSQL.Query(strSql);
+            return ds;
+        }
+        #endregion
+
+        #region 排班
+        public int AddSchedualInfo(List<SchedualInfo> listModel)
+        {
+            List<string> listSql = new List<string>();
+            //删除已经插入的数据（根据员工和日期）
+            var maxDate = listModel.Max(p => Convert.ToDateTime(p.DutyDate));
+            var minDate = listModel.Min(p => Convert.ToDateTime(p.DutyDate));
+            StringBuilder delWhere = new StringBuilder();
+            List<string> listStaff = new List<string>();
+            var staffs = listModel.GroupBy(p => p.StaffNo);
+            foreach (var item in staffs)
+            {
+                listStaff.Add(item.Key);
+            }
+            if (listStaff.Count > 0)
+            {
+                delWhere.AppendFormat(" and DutyDate >='{0}' and DutyDate <='{1}' ", minDate, maxDate);
+                for (int i = 0; i < listStaff.Count; i++)
+                {
+                    if (i == 0)
+                    {
+                        delWhere.AppendFormat(" and StaffNo in ('{0}' ", listStaff[i]);
+                    }
+                    else
+                    {
+                        delWhere.AppendFormat(" ,'{0}' ", listStaff[i]);
+                    }
+                }
+                delWhere.Append(") ");
+            }
+
+            listSql.Add("delete from schedualInfo where 1=1 " + delWhere.ToString() + " ");
+            foreach (var item in listModel)
+            {
+                string sql = string.Format("insert into schedualInfo(StaffNo,DutyDate,Schedual,RoomNo,Hours,Remark) values ('{0}','{1}','{2}','{3}','{4}','{5}')", item.StaffNo, item.DutyDate, item.Schedual, item.RoomNo, item.Hours, item.Remark);
+                listSql.Add(sql);
+            }
+            return DbHelperSQL.ExecuteSqlTran(listSql);
+        }
+        public DataSet GetSchedualInfo(string sqlWhere)
+        {
+            DataSet ds = new DataSet();
+            string strSql = string.Format(" select a.*,b.`Name` from schedualinfo a inner join staffinfo b on a.StaffNo = b.StaffNo where 1=1 {0} order by a.RoomNo", sqlWhere);
+            ds = DbHelperSQL.Query(strSql);
+            return ds;
+        }
+        public bool VerifySchedualInfo(List<SchedualInfo> listModel)
+        {
+            var maxDate = listModel.Max(p => Convert.ToDateTime(p.DutyDate));
+            var minDate = listModel.Min(p => Convert.ToDateTime(p.DutyDate));
+            List<string> rooms = new List<string>();
+            foreach (var item in listModel)
+            {
+                if (!rooms.Contains(item.RoomNo) && item.RoomNo != "")
+                {
+                    rooms.Add(item.RoomNo);
+                }
+            }
+            if (rooms.Count > 0)
+            {
+                StringBuilder strSql = new StringBuilder();
+                strSql.AppendFormat(" select COUNT(1) as totalrow from schedualinfo where DutyDate>='{0}' and DutyDate<='{1}' ", minDate, maxDate);
+                for (int i = 0; i < rooms.Count; i++)
+                {
+                    if (i == 0)
+                    {
+                        strSql.AppendFormat(" and RoomNo in ('{0}' ", rooms[i]);
+                    }
+                    else
+                    {
+                        strSql.AppendFormat(" ,'{0}' ", rooms[i]);
+                    }
+                }
+                strSql.Append(") ");
+                DataSet ds = new DataSet();
+                ds = DbHelperSQL.Query(strSql.ToString());
+                if (ds != null && ds.Tables.Count > 0 && ds.Tables[0].Rows.Count > 0)
+                {
+                    var rowNum = ds.Tables[0].Rows[0]["totalrow"].ToString();
+                    if (Convert.ToInt16(rowNum) > 0)
+                    {
+                        return false;
+                    }
+                }
+            }
+            return true;
+        }
+        #endregion
+
+        #region 排班模板
+        public DataSet GetSchedualTemplateList(int currentPage, int pageSize, string strWhere, string filedOrder)
+        {
+            //select * from table limit (start-1)*limit,limit; 其中start是页码，limit是每页显示的条数。
+            StringBuilder strSql = new StringBuilder();
+            strSql.AppendLine("  select COUNT(1) as totalrow from schedualtemplate;  ");
+            strSql.AppendLine(" select a.* from schedualtemplate a  ");
+            strSql.AppendFormat(" where 1=1 {0} ", strWhere);
+            if (filedOrder.Trim() != "")
+            {
+                strSql.Append(" order by " + filedOrder);
+            }
+            strSql.AppendFormat(" LIMIT {0},{1} ", (currentPage - 1) * pageSize, pageSize);
+            MySqlParameter[] parameters = {
+                        new MySqlParameter("@currentpage", MySqlDbType.Int16),
+                        new MySqlParameter("@pagesize", MySqlDbType.Int16)
+                        };
+            parameters[0].Value = currentPage;
+            parameters[1].Value = pageSize;
+            return DbHelperSQL.Query(strSql.ToString(), parameters);
+        }
+        public int AddSchedualTemplate(SchedualTemplate model)
+        {
+            List<String> sqlList = new List<string>();
+            StringBuilder strSql = new StringBuilder();
+            strSql.AppendLine(" insert into schedualtemplate (ID,TemplateName,RoomList,PeopleNum,TemplateRemark,Status) values ");
+            strSql.AppendFormat(" (null,'{0}','{1}','{2}','{3}','{4}') ", model.TemplateName, model.RoomList, model.PeopleNum, model.TemplateRemark, model.Status);
+            sqlList.Add(strSql.ToString());
+            strSql = new StringBuilder();
+            if (model.ListTemplateMapping != null && model.ListTemplateMapping.Count > 0)
+            {
+                foreach (var item in model.ListTemplateMapping)
+                {
+                    strSql.AppendLine(" insert into templatemapping (TemplateID,SerialNo,WhichDay,Schedual,Remark) values ");
+                    strSql.AppendFormat(" ((select a.ID from (select MAX(ID) as ID from schedualtemplate) a),'{0}','{1}','{2}','{3}' ) ; ", item.SerialNo, item.WhichDay, item.Schedual, item.Remark);
+                }
+            }
+            sqlList.Add(strSql.ToString());
+            return DbHelperSQL.ExecuteSqlTran(sqlList);
+        }
+        public int UpdateSchedualTemplate(SchedualTemplate model)
+        {
+            List<String> sqlList = new List<string>();
+            StringBuilder strSql = new StringBuilder();
+            strSql.AppendFormat(" update schedualtemplate set TemplateName='{1}',RoomList='{2}',PeopleNum='{3}',TemplateRemark='{4}',Status='{5}' where ID='{0}' ", model.ID, model.TemplateName, model.RoomList, model.PeopleNum, model.TemplateRemark, model.Status);
+            sqlList.Add(strSql.ToString());
+            strSql = new StringBuilder();
+            if (model.ListTemplateMapping != null && model.ListTemplateMapping.Count > 0)
+            {
+                strSql.AppendLine(" delete from templatemapping where TemplateID='" + model.ID + "';  ");
+                sqlList.Add(strSql.ToString());
+                strSql = new StringBuilder();
+                foreach (var item in model.ListTemplateMapping)
+                {
+                    strSql.AppendLine(" insert into templatemapping (TemplateID,SerialNo,WhichDay,Schedual,Remark) values ");
+                    strSql.AppendFormat(" ('{0}','{1}','{2}','{3}','{4}' ) ; ", model.ID, item.SerialNo, item.WhichDay, item.Schedual, item.Remark);
+                }
+            }
+            sqlList.Add(strSql.ToString());
+            return DbHelperSQL.ExecuteSqlTran(sqlList);
+        }
+        public bool VerifySchedualTemplate(SchedualTemplate model)
+        {
+            StringBuilder strSql = new StringBuilder();
+            strSql.AppendFormat(" select COUNT(1) as totalrow from schedualtemplate where TemplateName='{0}' ", model.TemplateName);
+            DataSet ds = new DataSet();
+            ds = DbHelperSQL.Query(strSql.ToString());
+            if (ds != null && ds.Tables.Count > 0 && ds.Tables[0].Rows.Count > 0)
+            {
+                var rowNum = ds.Tables[0].Rows[0]["totalrow"].ToString();
+                if (Convert.ToInt16(rowNum) > 0)
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        public SchedualTemplate GetSchedualTemplateByID(string ID)
+        {
+            SchedualTemplate model = new SchedualTemplate();
+            string strSql = string.Format(" select * from schedualtemplate a left join templatemapping b on a.ID = b.TemplateID where a.ID ='{0}' ", ID);
+            DataSet ds = new DataSet();
+            ds = DbHelperSQL.Query(strSql);
+            if (ds.Tables.Count > 0 && ds.Tables[0].Rows.Count > 0)
+            {
+                var row_0 = ds.Tables[0].Rows[0];
+                model.ID = Convert.ToInt16(ID);
+                model.TemplateName = row_0["TemplateName"].ToString();
+                model.RoomList = row_0["RoomList"].ToString();
+                model.PeopleNum = Convert.ToInt16(row_0["PeopleNum"]);
+                model.TemplateRemark = row_0["TemplateRemark"].ToString();
+                model.Status = Convert.ToInt16(row_0["Status"]);
+                List<TemplateMapping> listModel = new List<TemplateMapping>();
+                for (int i = 0; i < ds.Tables[0].Rows.Count; i++)
+                {
+                    var row = ds.Tables[0].Rows[i];
+                    listModel.Add(new TemplateMapping()
+                    {
+                        TemplateID = Convert.ToInt16(ID),
+                        SerialNo = Convert.ToInt16(row["SerialNo"]),
+                        WhichDay = Convert.ToInt16(row["WhichDay"]),
+                        Schedual = row["Schedual"].ToString(),
+                        Remark = row["Remark"].ToString()
+                    });
+                }
+                model.ListTemplateMapping = listModel;
+            }
+            return model;
+        }
+
+        public DataSet GetSchedualTemplateInfo()
+        {
+            DataSet ds = new DataSet();
+            string strSql = "select * from schedualtemplate where `Status`=1 ";
+            ds = DbHelperSQL.Query(strSql);
+            return ds;
+        }
+        #endregion
+
+        #region 其他工时信息
+        public DataSet GetOtherWorkTimeList(int currentPage, int pageSize, string strWhere, string filedOrder)
+        {
+            //select * from table limit (start-1)*limit,limit; 其中start是页码，limit是每页显示的条数。
+            StringBuilder strSql = new StringBuilder();
+            strSql.AppendLine("  select COUNT(1) as totalrow from otherWorkTime;  ");
+            strSql.AppendLine(" select a.*,b.Name from otherworktime a inner join staffinfo b on a.StaffNo = b.StaffNo ");
+            strSql.AppendFormat(" where 1=1 {0} ", strWhere);
+            if (filedOrder.Trim() != "")
+            {
+                strSql.Append(" order by " + filedOrder);
+            }
+            strSql.AppendFormat(" LIMIT {0},{1} ", (currentPage - 1) * pageSize, pageSize);
+            MySqlParameter[] parameters = {
+                        new MySqlParameter("@currentpage", MySqlDbType.Int16),
+                        new MySqlParameter("@pagesize", MySqlDbType.Int16)
+                        };
+            parameters[0].Value = currentPage;
+            parameters[1].Value = pageSize;
+            return DbHelperSQL.Query(strSql.ToString(), parameters);
+        }
+
+        public int AddOtherWorkTime(OtherWorkTime model)
+        {
+            StringBuilder strSql = new StringBuilder();
+            var beginTime = model.BeginTime == null ? "null" : ("'" + Convert.ToDateTime(model.BeginTime).ToString("yyyy-MM-dd HH:mm") + "'");
+            var endTime = model.EndTime == null ? "null" : ("'" + Convert.ToDateTime(model.EndTime).ToString("yyyy-MM-dd HH:mm") + "'");
+
+            strSql.AppendLine(" insert into otherworktime(ID,StaffNo,WorkType,BeginTime,EndTime,Hours,Status,Remark) values ");
+            strSql.AppendFormat(" (null,'{0}','{1}'," + beginTime + "," + endTime + ",'{2}','{3}','{4}' ) ",
+                model.StaffNo, model.WorkType, model.Hours, model.Status, model.Remark);
+            return DbHelperSQL.ExecuteSql(strSql.ToString());
+        }
+
+        public int UpdateOtherWorkTime(OtherWorkTime model)
+        {
+            StringBuilder strSql = new StringBuilder();
+            strSql.AppendLine(" update otherworktime ");
+            strSql.AppendFormat("  set StaffNo='{0}',WorkType='{1}',Hours='{2}',Status='{3}',Remark='{4}' ",
+                model.StaffNo, model.WorkType, model.Hours, model.Status, model.Remark);
+            if (model.BeginTime != null)
+            {
+                strSql.AppendFormat("  ,BeginTime='{0}' ", model.BeginTime);
+            }
+            if (model.EndTime != null)
+            {
+                strSql.AppendFormat("  ,EndTime='{0}' ", model.EndTime);
+            }
+            strSql.AppendFormat(" where ID='{0}' ", model.ID);
+            return DbHelperSQL.ExecuteSql(strSql.ToString());
+        }
+        public OtherWorkTime GetOtherWorkTimeByID(int ID)
+        {
+            OtherWorkTime model = new OtherWorkTime();
+            string strSql = string.Format(" select * from otherworktime where ID ='{0}' ", ID);
+            DataSet ds = new DataSet();
+            ds = DbHelperSQL.Query(strSql);
+            if (ds.Tables.Count > 0 && ds.Tables[0].Rows.Count > 0)
+            {
+                var row = ds.Tables[0].Rows[0];
+                model.ID = ID;
+                model.StaffNo = row["StaffNo"].ToString();
+                model.WorkType = Convert.ToInt16(row["WorkType"]);
+                model.Hours = Convert.ToInt16(row["Hours"]);
+                model.Status = Convert.ToInt16(row["Status"]);
+                model.Remark = row["Remark"].ToString();
+                if (!string.IsNullOrWhiteSpace(row["BeginTime"].ToString()))
+                {
+                    model.BeginTime = Convert.ToDateTime(row["BeginTime"]);
+                }
+                if (!string.IsNullOrWhiteSpace(row["EndTime"].ToString()))
+                {
+                    model.EndTime = Convert.ToDateTime(row["EndTime"]);
+                }
+            }
+            return model;
+        }
+
+        public DataSet GetSchedualCountList(int currentPage, int pageSize, string strWhere_a, string strWhere_b, string filedOrder)
+        {
+            StringBuilder strSql = new StringBuilder();
+            strSql.AppendLine(" select COUNT(1) as totalrow from ( ");
+            strSql.AppendLine(" select temp.StaffNo,temp.`Name`,SUM(temp.NormalHours) as NormalHours,SUM(temp.OtherHours) OtherHours from ( ");
+            strSql.AppendLine(" select a.StaffNo,b.`Name`,SUM(a.Hours) as NormalHours,0 as OtherHours from schedualinfo a  ");
+            strSql.AppendLine(" inner join staffinfo b on a.StaffNo = b.StaffNo ");
+            strSql.AppendFormat(" where 1=1 {0} ", strWhere_a);
+            strSql.AppendLine(" group by a.StaffNo,b.`Name`  ");
+            strSql.AppendLine(" union all ");
+            strSql.AppendLine(" select a.StaffNo,b.`Name`,0 as NormalHours,SUM(a.Hours) as OtherHours from otherworktime a  ");
+            strSql.AppendLine(" inner join staffinfo b on a.StaffNo = b.StaffNo  ");
+            strSql.AppendFormat(" where 1=1 {0} ", strWhere_b);
+            strSql.AppendLine(" group by a.StaffNo,b.`Name`) temp group by temp.StaffNo,temp.`Name` order by (temp.NormalHours+temp.OtherHours) desc ) temptb;  ");
+
+            strSql.AppendLine(" select temp.StaffNo,temp.`Name`,SUM(temp.NormalHours) as NormalHours,SUM(temp.OtherHours) OtherHours from ( ");
+            strSql.AppendLine(" select a.StaffNo,b.`Name`,SUM(a.Hours) as NormalHours,0 as OtherHours from schedualinfo a  ");
+            strSql.AppendLine(" inner join staffinfo b on a.StaffNo = b.StaffNo ");
+            strSql.AppendFormat(" where 1=1 {0} ", strWhere_a);
+            strSql.AppendLine(" group by a.StaffNo,b.`Name`  ");
+            strSql.AppendLine(" union all ");
+            strSql.AppendLine(" select a.StaffNo,b.`Name`,0 as NormalHours,SUM(a.Hours) as OtherHours from otherworktime a  ");
+            strSql.AppendLine(" inner join staffinfo b on a.StaffNo = b.StaffNo  ");
+            strSql.AppendFormat(" where 1=1 {0} ", strWhere_b);
+            strSql.AppendLine(" group by a.StaffNo,b.`Name`) temp group by temp.StaffNo,temp.`Name` ");
+            strSql.AppendLine(" order by (temp.NormalHours+temp.OtherHours) desc ");
+            //if (filedOrder.Trim() != "")
+            //{
+            //    strSql.Append(" order by " + filedOrder);
+            //}
+            strSql.AppendFormat(" LIMIT {0},{1} ", (currentPage - 1) * pageSize, pageSize);
+            MySqlParameter[] parameters = {
+                        new MySqlParameter("@currentpage", MySqlDbType.Int16),
+                        new MySqlParameter("@pagesize", MySqlDbType.Int16)
+                        };
+            parameters[0].Value = currentPage;
+            parameters[1].Value = pageSize;
+            return DbHelperSQL.Query(strSql.ToString(), parameters);
+        }
+        #endregion
+
+        #region 班次维护
+        public DataSet GetSchedualTime()
+        {
+            DataSet ds = new DataSet();
+            string strSql = "select * from SchedualTime";
+            ds = DbHelperSQL.Query(strSql);
+            return ds;
+        }
+        public DataSet GetSchedualTimeList(int currentPage, int pageSize, string strWhere, string filedOrder)
+        {
+            StringBuilder strSql = new StringBuilder();
+            strSql.AppendLine("  select COUNT(1) as totalrow from schedualtime;  ");
+            strSql.AppendLine(" select * from schedualtime ");
+            if (filedOrder.Trim() != "")
+            {
+                strSql.Append(" order by " + filedOrder);
+            }
+            strSql.AppendFormat(" LIMIT {0},{1} ", (currentPage - 1) * pageSize, pageSize);
+            MySqlParameter[] parameters = {
+                        new MySqlParameter("@currentpage", MySqlDbType.Int16),
+                        new MySqlParameter("@pagesize", MySqlDbType.Int16)
+                        };
+            parameters[0].Value = currentPage;
+            parameters[1].Value = pageSize;
+            return DbHelperSQL.Query(strSql.ToString(), parameters);
+        }
+
+        public int DeleteSchedualTime(int ID)
+        {
+            StringBuilder strSql = new StringBuilder();
+            strSql.AppendFormat(" delete from schedualtime where ID ='{0}' ", ID);
+            return DbHelperSQL.ExecuteSql(strSql.ToString());
+        }
+
+        public int AddSchedualTime(string name, string schedual)
+        {
+            StringBuilder strSql = new StringBuilder();
+            strSql.AppendLine(" insert into schedualtime values ");
+            strSql.AppendFormat(" (null,'{0}','{1}' ) ", name, schedual);
+            return DbHelperSQL.ExecuteSql(strSql.ToString());
+        }
+
+        public bool ExistsSchedualTime(string name)
+        {
+            StringBuilder strSql = new StringBuilder();
+            strSql.AppendFormat(" select count(1) from schedualtime where ID='{0}'", name);
+            return DbHelperSQL.Exists(strSql.ToString());
+        }
+        #endregion
+
+        #region 房间组合
+        public DataSet GetRoomCombine()
+        {
+            DataSet ds = new DataSet();
+            string strSql = "select * from roomcombine";
+            ds = DbHelperSQL.Query(strSql);
+            return ds;
+        }
+        public DataSet GetRoomCombineList(int currentPage, int pageSize, string strWhere, string filedOrder)
+        {
+            StringBuilder strSql = new StringBuilder();
+            strSql.AppendFormat("  select COUNT(1) as totalrow from roomcombine where 1=1 {0} ;  ", strWhere);
+            strSql.AppendLine(" select * from roomcombine ");
+            strSql.AppendFormat(" where 1=1 {0} ", strWhere);
+            if (filedOrder.Trim() != "")
+            {
+                strSql.Append(" order by " + filedOrder);
+            }
+            strSql.AppendFormat(" LIMIT {0},{1} ", (currentPage - 1) * pageSize, pageSize);
+            MySqlParameter[] parameters = {
+                        new MySqlParameter("@currentpage", MySqlDbType.Int16),
+                        new MySqlParameter("@pagesize", MySqlDbType.Int16)
+                        };
+            parameters[0].Value = currentPage;
+            parameters[1].Value = pageSize;
+            return DbHelperSQL.Query(strSql.ToString(), parameters);
+        }
+
+        public int DeleteRoomCombine(int ID)
+        {
+            StringBuilder strSql = new StringBuilder();
+            strSql.AppendFormat(" delete from roomcombine where ID ='{0}' ", ID);
+            return DbHelperSQL.ExecuteSql(strSql.ToString());
+        }
+
+        public int AddRoomCombine(RoomCombine model)
+        {
+            StringBuilder strSql = new StringBuilder();
+            strSql.AppendLine(" insert into roomcombine values ");
+            strSql.AppendFormat(" (null,'{0}','{1}' ) ", model.RoomList, model.Remark);
+            return DbHelperSQL.ExecuteSql(strSql.ToString());
+        }
+
+        public bool ExistsRoomCombine(string name)
+        {
+            StringBuilder strSql = new StringBuilder();
+            strSql.AppendFormat(" select count(1) from roomcombine where RoomList='{0}'", name);
+            return DbHelperSQL.Exists(strSql.ToString());
+        }
+
+        public RoomCombine GetRoomCombineInfoByID(int ID)
+        {
+            RoomCombine model = new RoomCombine();
+            string strSql = string.Format(" select * from roomcombine where ID ='{0}' ", ID);
+            DataSet ds = new DataSet();
+            ds = DbHelperSQL.Query(strSql);
+            if (ds.Tables.Count > 0 && ds.Tables[0].Rows.Count > 0)
+            {
+                var row = ds.Tables[0].Rows[0];
+                model.ID = ID;
+                model.RoomList = row["RoomList"].ToString();
+                model.Remark = row["Remark"].ToString();
+            }
+            return model;
+        }
+
+        public int UpdateRoomCombine(RoomCombine model)
+        {
+            StringBuilder strSql = new StringBuilder();
+            strSql.AppendLine(" update roomcombine ");
+            strSql.AppendFormat("  set RoomList='{0}',Remark='{1}' ",model.RoomList,model.Remark);
+            strSql.AppendFormat(" where ID='{0}' ", model.ID);
+            return DbHelperSQL.ExecuteSql(strSql.ToString());
+        }
+        #endregion
+    }
+}

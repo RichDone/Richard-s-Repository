@@ -1,0 +1,87 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>上海奥和投资</title>
+    <meta charset="utf-8" />
+    <link href="Css/style.css" rel="stylesheet" />
+    <script src="Script/jquery-1.4.2.min.js"></script>
+    <script type="text/javascript">
+        function ChangeIframe(url, param) {
+            if (param) {
+                $("#iframInfo").attr("src", "SubPage/" + url + ".html?new=" + Math.random() + "&" + param);
+            }
+            else {
+                $("#iframInfo").attr("src", "SubPage/" + url + ".html?new=" + Math.random());
+            }
+            var iframeHeight = $("#iframInfo").contents().find("body").height();
+            $("#iframInfo").height(iframeHeight);
+        }
+        $(function () {
+            $("#menu .ul_hor li").mousemove(function () {
+                $(this).find(".ul_ver").show();
+            }).mouseout(function () {
+                $(this).find(".ul_ver").hide();
+            });
+        })
+    </script>
+</head>
+<body>
+    <div class="wrap">
+        <div class="head">
+            <div class="lineShow">上海奥和投资管理有限公司</div>
+            <table cellpadding="0" cellspacing="0">
+                <tr>
+                    <th>事件模块</th>
+                    <td><input class="bigBtn" type="button" value="意外事件录入" onclick="ChangeIframe('AddAccident')"/></td>
+                    <td><input class="bigBtn" type="button" value="意外事件查询" onclick="ChangeIframe('Accident')"/></td>
+                    <td><input class="bigBtn" type="button" value="事件类型维护" onclick="ChangeIframe('Manage_AccidentType')"/></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <th>巡视记录</th>
+                    <td><input class="normalBtn" type="button" value="录入" onclick="ChangeIframe('AddDailyRecord')"/></td>
+                    <td><input class="normalBtn" type="button" value="记录查看" onclick="ChangeIframe('DailyRecord')"/></td>
+                    <td><input class="bigBtn" type="button" value="记录类型维护" onclick="ChangeIframe('Manage_DailyRecordType')"/></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <th>服务对象信息</th>
+                    <td><input class="bigBtn" type="button" value="客人信息管理" onclick="ChangeIframe('Guest')"/></td>
+                    <td><input class="bigBtn" type="button" value="意外事件统计" onclick="ChangeIframe('AccidentStats')" /></td>
+                    <td><input class="bigBtn" type="button" value="日常记录统计" onclick="ChangeIframe('DailyRecordStats')" /></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <th>员工信息</th>
+                    <td><input class="bigBtn" type="button" value="个人事件录入" onclick="ChangeIframe('AddStaffEvaluate')"/></td>
+                    <td><input class="bigBtn" type="button" value="个人事件查询" onclick="ChangeIframe('StaffEvaluate')"/></td>
+                    <td><input class="bigBtn" type="button" value="员工信息管理" onclick="ChangeIframe('StaffManage')" /></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <th>排班管理</th>
+                    <td><input class="normalBtn" type="button" value="排班信息" onclick="ChangeIframe('Schedual')" /></td>
+                    <td><input class="normalBtn" type="button" value="添加排班" onclick="ChangeIframe('AddSchedual')" /></td>
+                    <td><input class="bigBtn" type="button" value="排班模板维护" onclick="ChangeIframe('SchedualTemplate')" /><input class="bigBtn ml_40" type="button" value="房间组合维护" onclick="ChangeIframe('RoomCombine')" /></td>
+                    <td></td>
+                </tr>
+                <tr>
+                    <th>工时管理</th>
+                    <td><input class="normalBtn" type="button" value="其他工时" onclick="ChangeIframe('OtherWorkTime')" /></td>
+                    <td><input class="bigBtn" type="button" value="员工工时统计" onclick="ChangeIframe('SchedualCount')" /></td>
+                    <td><input class="normalBtn" type="button" value="班次维护" onclick="ChangeIframe('SchedualTime')" /></td>
+                    <td></td>
+                </tr>
+            </table>
+        </div>
+        <div class="main">
+            <iframe id="iframInfo" class="iframe" scrolling="no" frameborder="0" src="SubPage/Accident.html">
+
+            </iframe>
+        </div>
+        <div class="footer">
+        </div>
+    </div>
+</body>
+</html>

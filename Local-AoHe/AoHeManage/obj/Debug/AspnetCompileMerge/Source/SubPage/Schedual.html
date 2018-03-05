@@ -1,0 +1,467 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>添加排班</title>
+    <meta charset="utf-8" />
+    <script src="../Script/global.js"></script>
+    <link href="../Css/style.css" rel="stylesheet" />
+    <script src="../Script/jquery-1.4.2.min.js"></script>
+    <script src="../times/WdatePicker.js"></script>
+    <script src="../Script/excellentexport.js"></script>
+    <script type="text/javascript">
+        $(function () {
+            InitStaff();
+            InitSchedualTime();
+            var getMonth = new Date().ToString("yyyy-MM");
+            $("#begin_ChooseMonth").val(getMonth + "-01");
+            $("#end_ChooseMonth").val(new Date(getMonth + "-01").AddMonths(1).AddDays(-1).ToString("yyyy-MM-dd"));
+        })
+        function InitSchedualTime() {
+            $("#SchedualTime").empty();
+            $.ajax(
+           {
+               type: "GET",
+               url: "../MainHandler.ashx?action=GetSchedualTime",
+               dataType: 'text',
+               success: function (result) {
+                   if (result != null && result != "" && result.length > 0) {
+                       $("#schedualTime").append(result);
+                   }
+               }
+           });
+        }
+        function AutoIframeHeight() {
+            //设置iframe高度
+            var iframeHeight = $("#iframInfo", window.parent.document).contents().find("body").height();
+            $("#iframInfo", window.parent.document).height(iframeHeight);
+        }
+        function GetSchedualInfo() {
+            var begin_ChooseMonth = $("#begin_ChooseMonth").val();
+            var end_ChooseMonth = $("#end_ChooseMonth").val();
+            var staffNo = $("#staffNo").val();
+            if (begin_ChooseMonth == "" || end_ChooseMonth == "") {
+                alert("请选择日期！");
+                return false;
+            }
+            $("#schedualInfo").html("");
+            var querydata = "&begin_ChooseMonth=" + begin_ChooseMonth + "&end_ChooseMonth=" + end_ChooseMonth + "&staffNo=" + staffNo;
+            $.ajax({
+                type: "GET",
+                url: "../MainHandler.ashx?action=GetSchedualInfo",
+                dataType: 'text',
+                data: encodeURI(querydata),
+                success: function (result) {
+                    if (result != null && result != "" && result.length > 0) {
+                        $("#schedualInfo").html(result);
+                        $("#schedualInfo").addClass("scroll_x");
+                    }
+                    AutoIframeHeight();
+                }
+            });
+        }
+        function InitStaff() {
+            $("#staffNo").empty();
+            $.ajax(
+           {
+               type: "GET",
+               url: "../MainHandler.ashx?action=GetSchedualStaffInfo",
+               dataType: 'text',
+               success: function (result) {
+                   if (result != null && result != "" && result.length > 0) {
+                       $("#staffNo").append(result);
+                   }
+               }
+           });
+        }
+        function ChangeSchedual(obj) {
+            var staffName = $(obj).attr("staffName");
+            var bizDate = $(obj).attr("bizDate");
+            $("#changeSchedualTitle").html("护理员：" + staffName + "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;日期：" + bizDate);
+            $(obj).addClass("bg_yellow");
+            //初始化
+            $("#beginDate_a").val("");
+            $("#endDate_a").val("");
+            $("#beginDate_b").val("");
+            $("#endDate_b").val("");
+            $("#remark").val("");
+            $("#rest").attr("checked", false);
+            $("#schedualTime").val("");
+
+            Loading();
+            //获取原数据
+            var period = $(obj).find(".period").html();
+            var remark = $(obj).find(".remark").html();
+            $("#remark").html(remark);
+            //是否两个阶段
+            if (period.indexOf("/") >= 0) {
+                var period_a = period.split("/")[0];
+                var period_b = period.split("/")[1];
+                var begin_a = period_a.split("-")[0];
+                var end_a = period_a.split("-")[1];
+                var begin_b = period_b.split("-")[0];
+                var end_b = period_b.split("-")[1];
+                $("#beginDate_a").val(begin_a);
+                $("#endDate_a").val(end_a);
+                $("#beginDate_b").val(begin_b);
+                $("#endDate_b").val(end_b);
+            }
+            else {
+                if (period.indexOf("-") >= 0) {
+                    var begin = period.split("-")[0];
+                    var end = period.split("-")[1];
+                    $("#beginDate_a").val(begin);
+                    $("#endDate_a").val(end);
+                }
+                else {
+                    //休息
+                    $("#rest").attr("checked", true);
+                }
+            }
+            var scrollTop = $(parent.document).scrollTop();
+            if (scrollTop > 150) {
+                $(".schedual_change").css("top", scrollTop);
+            }
+            else {
+                $(".schedual_change").css("top", 150);
+            }
+            $(".schedual_change").show();
+            $(".schedual_change .saveBtn").unbind('click').click(function () {
+                var rest = $("#rest").attr("checked");
+                var begin_a = $("#beginDate_a").val();
+                var end_a = $("#endDate_a").val();
+                var begin_b = $("#beginDate_b").val();
+                var end_b = $("#endDate_b").val();
+                var remark = $("#remark").html();
+                $(obj).find(".remark").html(remark);
+                if (rest == true) {
+                    $(obj).find(".period").html("休");
+                }
+                else {
+                    if (begin_a == "" || (begin_a != "" && end_a == "")) {
+                        alert("请输入完整的时间段1！");
+                        return false;
+                    }
+                    if (begin_b != "" && end_b == "") {
+                        alert("请输入完整的时间段2！");
+                        return false;
+                    }
+                    var period = "";
+                    if (begin_b == "") {
+                        period = begin_a + "-" + end_a;
+                    }
+                    else {
+                        period = begin_a + "-" + end_a + "/" + begin_b + "-" + end_b;
+                    }
+                    $(obj).find(".period").html(period);
+                }
+                UnLoading();
+                $(".schedual_change").hide();
+                $(obj).removeClass("bg_yellow");
+                AutoIframeHeight();
+            });
+        }
+        function ChangeSchedualTime() {
+            $("#beginDate_a").val("");
+            $("#endDate_a").val("");
+            $("#beginDate_b").val("");
+            $("#endDate_b").val("");
+            //选择班次后自动赋值时间段
+            var period = $("#schedualTime").val();
+            //是否两个阶段
+            if (period.indexOf("/") >= 0) {
+                var period_a = period.split("/")[0];
+                var period_b = period.split("/")[1];
+                var begin_a = period_a.split("-")[0];
+                var end_a = period_a.split("-")[1];
+                var begin_b = period_b.split("-")[0];
+                var end_b = period_b.split("-")[1];
+                $("#beginDate_a").val(begin_a);
+                $("#endDate_a").val(end_a);
+                $("#beginDate_b").val(begin_b);
+                $("#endDate_b").val(end_b);
+            }
+            else {
+                if (period.indexOf("-") >= 0) {
+                    var begin = period.split("-")[0];
+                    var end = period.split("-")[1];
+                    $("#beginDate_a").val(begin);
+                    $("#endDate_a").val(end);
+                }
+            }
+        }
+        function CloseChange() {
+            UnLoading();
+            $("#schedualInfo table tr td").removeClass("bg_yellow");
+            $(".schedual_change").hide();
+        }
+        function GetClassByTxt(txt) {
+            var bdClass = "";
+            if (txt == "白") {
+                bdClass = "bg_white";
+            }
+            if (txt == "夜") {
+                bdClass = "bg_blue";
+            }
+            if (txt == "两") {
+                bdClass = "bg_green";
+            }
+            if (txt == "洗澡") {
+                bdClass = "bg_lithtred";
+            }
+            if (txt == "打扫") {
+                bdClass = "bg_purple";
+            }
+            return bdClass;
+        }
+        function AddSchedualInfo() {
+            Loading("请稍等几秒钟...");
+            var chooseMonth = $("#begin_ChooseMonth").val();
+            var year = new Date(chooseMonth).getFullYear();
+            var models = [];
+            var table = $("#schedualInfo").find("table").eq(0);
+            var trs = table.find("tr");
+            if (trs.length < 3) {
+                alert("无任何提交数据");
+                return false;
+            }
+            var tempRoomNo = "";
+            for (var i = 0; i < trs.length; i++) {
+                //获取DutyDate
+                var tr_0 = trs.eq(0);
+                if (i >= 2) {
+                    var tr = trs.eq(i);
+                    var tds = tr.find("td");
+                    for (var j = 0; j < tds.length; j++) {
+                        //获取房间号，员工工号
+                        var roomNo = "";
+                        var staffNo = "";
+                        var ifSelect = tds.eq(0).find(".IsRoom").length;
+                        //添加和修改是不一样的
+                        if (ifSelect > 0) {
+                            roomNo = tds.eq(0).find("span").eq(0).attr("roomNo");
+                        }
+                        if (ifSelect > 0) {
+                            tempRoomNo = roomNo;
+                            staffNo = tds.eq(1).find("span").eq(0).attr("staffNo");
+                            if (j >= 2) {
+                                //获取班次内容（时间和备注）period,remark
+                                var schedual = tds.eq(j).find(".period").eq(0).html();
+                                var remark = tds.eq(j).find(".remark").eq(0).html();
+                                var model = {
+                                    "StaffNo": staffNo,
+                                    "DutyDate": year + "-" + tr_0.find("th").eq(j - 1).html(),
+                                    "Schedual": schedual,
+                                    "RoomNo": roomNo,
+                                    "Hours": 0,
+                                    "Remark": remark
+                                }
+                                models.push(model);
+                            }
+                        }
+                        else {
+                            roomNo = tempRoomNo;
+                            staffNo = tds.eq(0).find("span").eq(0).attr("staffNo");
+                            if (j >= 1) {
+                                //获取班次内容（时间和备注）
+                                var schedual = tds.eq(j).find(".period").eq(0).html();
+                                var remark = tds.eq(j).find(".remark").eq(0).html();
+                                var model = {
+                                    "StaffNo": staffNo,
+                                    "DutyDate": year + "-" + tr_0.find("th").eq(j).html(),
+                                    "Schedual": schedual,
+                                    "RoomNo": roomNo,
+                                    "Hours": 0,
+                                    "Remark": remark
+                                }
+                                models.push(model);
+                            }
+                        }
+                    }
+                }
+            }
+            var querydata = "&listSchedual=" + thistoString(models) + "&saveflag=edit";
+            $.ajax({
+                type: "post",
+                url: "../MainHandler.ashx?action=AddSchedualInfo",
+                dataType: 'text',
+                data: encodeURI(querydata),
+                success: function (result) {
+                    if (isNaN(result)) {
+                        alert(result);
+                        UnLoading();
+                    }
+                    else {
+                        if (parseInt(result) > 0) {
+                            alert("保存排班成功！");
+                            UnLoading();
+                            window.parent.ChangeIframe('Schedual');
+                        }
+                        else {
+                            alert("保存排班异常，请重新填写！");
+                            UnLoading();
+                        }
+                    }
+                }
+            });
+        }
+        function PrintSchedualInfo() {
+            //exportExcel("testTB");
+            exportExcel("schedualInfo");
+        }
+        function getExplorer() {
+            if (window.hasOwnProperty("ActiveXObject") == true) {
+                if (!!window.ActiveXObject || "ActiveXObject" in window) {
+                    return 'ie';
+                }
+                if (window.navigator.userAgent.indexOf("MSIE") >= 0) {
+                    return 'ie';
+                }
+            }
+            return 'other';
+        }
+        function exportExcel(tableid) {
+            if (getExplorer() == 'ie') {
+                var trCount = $("#" + tableid).find("tr").length;
+                var curTbl = document.getElementById(tableid);
+                var oXL = new ActiveXObject("Excel.Application");
+                var oWB = oXL.Workbooks.Add();
+                var xlsheet = oWB.Worksheets(1);
+                var sel = document.body.createTextRange();
+                sel.moveToElementText(curTbl);
+                sel.select();
+                sel.execCommand("Copy");
+                xlsheet.Paste();
+                //设置Excel样式
+                xlsheet.Rows(1 + ":" + 2).Font.Size = 10;//字体
+                xlsheet.Rows(3 + ":" + trCount).Font.Size = 9;//字体
+                xlsheet.Columns("A:B").Font.Size = 10;//字体
+                xlsheet.Rows(1 + ":" + 2).Font.Bold = true;//粗体
+                xlsheet.Columns(1).ColumnWidth = 8;//列宽
+                xlsheet.Columns(2).ColumnWidth = 10;
+                xlsheet.Columns("C:AZ").ColumnWidth = 18;
+                xlsheet.Rows(1 + ":" + trCount).RowHeight = 25;//行高
+                xlsheet.Rows(1 + ":" + 2).Interior.ColorIndex = 15;//行背景颜色
+                xlsheet.Rows(1 + ":" + trCount).HorizontalAlignment = 3;//水平居中
+                xlsheet.Rows(1 + ":" + trCount).VerticalAlignment = 2;//垂直居中
+                xlsheet.Rows(1 + ":" + trCount).Borders.Weight = 2;//设置边框样式
+                oXL.Visible = true;
+                try {
+                    var fname = oXL.Application.GetSaveAsFilename("Schedual.xls", "Excel Spreadsheets (*.xls), *.xls");
+                } catch (e) {
+                    alert("出现异常，异常信息：" + e);
+                } finally {
+                    if (fname != false) {
+                        oWB.SaveAs(fname);
+                    }
+                }
+            }
+            else {
+                alert("请使用IE浏览器！");
+                //tableToExcel(tableid);
+            }
+        }
+        var tableToExcel = (function () {
+            var uri = 'data:application/vnd.ms-excel;base64,',
+            template = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel"'
+            + 'xmlns="http://www.w3.org/TR/REC-html40"><head><!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet>'
+            + '<x:Name>{worksheet}</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets>'
+            + '</x:ExcelWorkbook></xml><![endif]-->' + getCssHtml()
+            + '</head><body ><table class="list_tb tb_fix">{table}</table></body></html>',
+                    base64 = function (s) { return window.btoa(unescape(encodeURIComponent(s))); },
+                    format = function (s, c) { return s.replace(/{(\w+)}/g, function (m, p) { return c[p]; }); };
+            return function (table, name) {
+                if (!table.nodeType) table = document.getElementById(table);
+                var ctx = { worksheet: name || 'Worksheet', table: table.innerHTML };
+                document.getElementById("exportExcel").href = uri + base64(format(template, ctx));
+                document.getElementById("exportExcel").download = "Schedual.xls";
+                document.getElementById("exportExcel").click();
+            };
+        })();
+        function getCssHtml() {
+            var html = "";
+            html += "<style type='text/css'>";
+            html += ".list_tb{border-top:1px solid black;border-left:1px solid black;border-bottom:1px solid black;font-size:12px;width:90%;margin:0 auto;}";
+            html += ".list_tb tr th{border-top:1px solid black;border-right:1px solid black;text-align:center;height:30px;line-height:30px;font-weight:bold;background-color:lightgray;}";
+            html += ".list_tb tr td{border-top:1px solid black;border-right:1px solid black;text-align:center;height:25px;line-height:18px;}";
+            html += ".tb_fix{table-layout:fixed;}";
+            html += "</style>";
+            return html;
+        }
+        function ChangeReasonableSchedualPage() {
+            window.parent.ChangeIframe('ReasonableSchedualInfo');
+        }
+    </script>
+</head>
+<body style="min-height:400px;">
+    <div id="insert">
+        <fieldset>
+            <legend><span class="field_leg">排班信息</span></legend>
+            <div class="schedual_change">
+                <div class="title_float" style="text-align:left">修改班次<span class="ml_50" id="changeSchedualTitle"></span><span class="close_float" onclick="CloseChange()">×</span></div>
+                <table cellspacing="7">
+                    <tr>
+                        <td>班次选择：</td>
+                        <td>
+                            <select class="normalSelect" id="schedualTime" onchange="ChangeSchedualTime()"></select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>时间段1：</td>
+                        <td>
+                            <input type="text" id="beginDate_a" class="Wdate" readonly="readonly" onclick="WdatePicker({ dateFmt: 'HH:mm' })" /><span class="ml_20 mr_20">至</span><input type="text" id="endDate_a" class="Wdate" readonly="readonly" onclick="WdatePicker({ dateFmt: 'HH:mm' })" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>时间段2：</td>
+                        <td>
+                            <input type="text" id="beginDate_b" class="Wdate" readonly="readonly" onclick="WdatePicker({ dateFmt: 'HH:mm' })" /><span class="ml_20 mr_20">至</span><input type="text" id="endDate_b" class="Wdate" readonly="readonly" onclick="WdatePicker({ dateFmt: 'HH:mm' })" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>备注：</td>
+                        <td>
+                            <textarea id="remark" cols="30" rows="3"></textarea>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>是否休息：</td>
+                        <td><input class="cb" onclick="ClickRest()" type="checkbox" id="rest" name="rest" /><span>休</span></td>
+                    </tr>
+                </table>
+                <div class="footLineBtn_float">
+                    <span>tips：非两头班时间段2无需填写！</span><input type="button" value="保存" class="saveBtn ml_20" />
+                </div>
+            </div>
+            <div>
+                <table class="insert_tb">
+                    <tr>
+                        <td class="width_10 blod" align="right">日期选择：</td>
+                        <td class="width_90">
+                            <input type="text" id="begin_ChooseMonth" class="Wdate ml_40" readonly="readonly" onclick="WdatePicker({ dateFmt: 'yyyy-MM-dd' })" />
+                            <span class="ml_20">至</span>
+                            <input type="text" id="end_ChooseMonth" class="Wdate ml_20" readonly="readonly" onclick="WdatePicker({ dateFmt: 'yyyy-MM-dd' })" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="width_10 blod" align="right">护理员：</td>
+                        <td class="width_90">
+                            <select id="staffNo" class="normalSelect ml_40">
+                                <option value="">所有人</option>
+                            </select>
+                            <input type="button" value="查询" class="confirmBtn ml_100" onclick="GetSchedualInfo()" />
+                            <input type="button" value="合理性检测" class="confirmBtn_b ml_40" onclick="ChangeReasonableSchedualPage()" />
+                        </td>
+                    </tr>
+                </table>
+                <div id="schedualInfo" class="mt_5 mb_20"></div>
+                <div class="footLineBtn">
+                    <a id="exportExcel" style="display:none;">导出</a>
+                    <input type="button" value="保存" class="saveBtn" onclick="AddSchedualInfo()" />
+                    <input type="button" value="导出到Excel" class="saveBtn" onclick="PrintSchedualInfo()"  />
+                </div>
+            </div>
+        </fieldset>
+    </div>
+</body>
+</html>

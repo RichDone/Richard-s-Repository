@@ -1,0 +1,83 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>合理性检测</title>
+    <meta charset="utf-8" />
+    <script src="../Script/global.js"></script>
+    <link href="../Css/style.css" rel="stylesheet" />
+    <script src="../Script/jquery-1.4.2.min.js"></script>
+    <script src="../times/WdatePicker.js"></script>
+    <script src="../Script/excellentexport.js"></script>
+    <script type="text/javascript">
+        $(function () {
+            var getMonth = new Date().ToString("yyyy-MM");
+            $("#begin_ChooseMonth").val(getMonth + "-01");
+            $("#end_ChooseMonth").val(new Date(getMonth + "-01").AddMonths(1).AddDays(-1).ToString("yyyy-MM-dd"));
+        })
+        function AutoIframeHeight() {
+            //设置iframe高度
+            var iframeHeight = $("#iframInfo", window.parent.document).contents().find("body").height();
+            $("#iframInfo", window.parent.document).height(iframeHeight);
+        }
+        function CheckReasonableSchedualInfo(type, obj) {
+            var begin_ChooseMonth = $("#begin_ChooseMonth").val();
+            var end_ChooseMonth = $("#end_ChooseMonth").val();
+            if (begin_ChooseMonth == "" || end_ChooseMonth == "") {
+                alert("请选择日期！");
+                return false;
+            }
+            $("#reasonableTitle").html($(obj).html());
+            $("#reasonableSchedualInfo").html("");
+            Loading("正在检测，请稍等...");
+            var querydata = "&begin_ChooseMonth=" + begin_ChooseMonth + "&end_ChooseMonth=" + end_ChooseMonth + "&type=" + type;
+            $.ajax({
+                type: "GET",
+                url: "../MainHandler.ashx?action=CheckReasonableSchedualInfo",
+                dataType: 'text',
+                data: encodeURI(querydata),
+                success: function (result) {
+                    UnLoading();
+                    if (result != null && result != "" && result.length > 0) {
+                        $("#reasonableSchedualInfo").html(result);
+                        $("#reasonableSchedualInfo").addClass("scroll_x");
+                    }
+                    AutoIframeHeight();
+                }
+            });
+        }
+    </script>
+</head>
+<body style="min-height:400px;">
+    <div id="insert">
+        <fieldset>
+            <legend><span class="field_leg">排班合理性检测</span></legend>
+            <div>
+                <table class="insert_tb">
+                    <tr>
+                        <td class="width_10 blod" align="right">日期选择：</td>
+                        <td class="width_90">
+                            <input type="text" id="begin_ChooseMonth" class="Wdate ml_40" readonly="readonly" onclick="WdatePicker({ dateFmt: 'yyyy-MM-dd' })" />
+                            <span class="ml_20">至</span>
+                            <input type="text" id="end_ChooseMonth" class="Wdate ml_20" readonly="readonly" onclick="WdatePicker({ dateFmt: 'yyyy-MM-dd' })" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="2">
+                            <ul class="reasonList">
+                                <li><a href="javascript:void(0)" onclick="CheckReasonableSchedualInfo('a',this)">连续两天的班次时间间隔小于12小时</a></li>
+                                <li><a href="javascript:void(0)" onclick="CheckReasonableSchedualInfo('b',this)">连续上班条数超过6天</a></li>
+                                <li><a href="javascript:void(0)" onclick="CheckReasonableSchedualInfo('c',this)">连续夜班条数超过2天</a></li>
+                                <li><a href="javascript:void(0)" onclick="CheckReasonableSchedualInfo('d',this)">整月班表中累计最大工时和最小工时差异大于20小时</a></li>
+                                <li><a href="javascript:void(0)" onclick="CheckReasonableSchedualInfo('e',this)">整月班表中累计夜班数量差异个数大于1个</a></li>
+                            </ul>
+                        </td>
+                    </tr>
+                </table>
+                <div class="lineShow_s" id="reasonableTitle"></div>
+                <div id="reasonableSchedualInfo" class="mt_5 mb_20"></div>
+            </div>
+        </fieldset>
+    </div>
+</body>
+</html>

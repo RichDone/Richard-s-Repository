@@ -1,0 +1,135 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>意外事件</title>
+    <meta charset="utf-8" />
+    <link href="../Css/style.css" rel="stylesheet" />
+    <script src="../Script/jquery-1.4.2.min.js"></script>
+    <script src="../times/WdatePicker.js"></script>
+    <script src="../Script/global.js"></script>
+    <script type="text/javascript">
+        var sortfield = "";
+        var sorttype = "";
+        var saveflag = "";
+        function setsort(_sortfield) {
+            if (sortfield != _sortfield) {
+                sorttype = "asc";
+                sortfield = _sortfield;
+            }
+            else {
+                if (sorttype == "asc") {
+                    sorttype = "desc";
+                }
+                else {
+                    sorttype = "asc";
+                }
+            }
+            var currentpage = $("#hid_currentpage").val();
+            getPage(currentpage);
+        }
+        //跳转页面
+        function pagespress() {
+            var k = window.event.keyCode;
+            if ((k == 46) || (k == 8) || (k >= 48 && k <= 57) || (k >= 96 && k <= 105) || (k >= 37 && k <= 40)) {
+            }
+            else if (k == 13) {
+                var topage = $("#txt_topages").val();
+                if (topage != '0') {
+                    if (parseInt(topage, 10) > parseInt($("#hid_totalpage").val(), 10)) {
+                        topage = $("#hid_totalpage").val();
+                        $("#txt_topages").val(topage);
+                    }
+                    getPage(topage);
+                }
+            }
+            else {
+                window.event.returnValue = false;
+            }
+        }
+        //点击GO按钮进行翻页动作
+        function pagespressForGo() {
+            var topage = $("#txt_topages").val();
+            if (topage != '0') {
+                if (parseInt(topage, 10) > parseInt($("#hid_totalpage").val(), 10)) {
+                    topage = $("#hid_totalpage").val();
+                    $("#txt_topages").val(topage);
+                }
+                getPage(topage);
+            }
+        }
+        $(document).ready(function () {
+            var beginDate = new Date().AddMonths(-1).ToString("yyyy-MM-dd");
+            var endDate = new Date().ToString("yyyy-MM-dd");
+            $("#beginDate").val(beginDate);
+            $("#endDate").val(endDate);
+            InitAccidentType();
+            getPage(1);
+        });
+        function getPage(currentpage) {
+            var beginDate = $("#beginDate").val();
+            var endDate = $("#endDate").val();
+            var name = $("#name").val();
+            var accidentType = $("#accidentType").val();
+            var pagesize = "15";
+            if ($("#sel_pagesize").val() != "" && typeof ($("#sel_pagesize").val()) != "undefined") { pagesize = $("#sel_pagesize").val(); }
+            var querydata = "&name=" + name + "&accidentType=" + accidentType + "&beginDate=" + beginDate + "&endDate=" + endDate + "&currentpage=" + currentpage + "&pagesize=" + pagesize + "&sortfield=" + sortfield + "&sorttype=" + sorttype;
+            $.ajax(
+            {
+                type: "GET",
+                url: "../MainHandler.ashx?action=getRecordPage_AccidentInfo",
+                dataType: 'text',
+                data: encodeURI(querydata),
+                success: function (result) {
+                    $("#accident_tb").html(result);
+                    //设置iframe高度
+                    var iframeHeight = $("#iframInfo", window.parent.document).contents().find("body").height();
+                    $("#iframInfo", window.parent.document).height(iframeHeight);
+                }
+            });
+        }
+        function InitAccidentType() {
+            $("#accidentType").empty();
+            var querydata = "&paramType=AccidentType";
+            $.ajax(
+           {
+               type: "GET",
+               url: "../MainHandler.ashx?action=InitSelect_ParamOption",
+               dataType: 'text',
+               data: encodeURI(querydata),
+               success: function (result) {
+                   if (result != null && result != "" && result.length > 0) {
+                       $("#accidentType").append(result);
+                   }
+               }
+           });
+        }
+        function FollowAccident(accidentID) {
+            window.parent.ChangeIframe('AccidentFollwo', 'accidentID=' + accidentID);
+        }
+        function UpdateAccident(accidentID) {
+            window.parent.ChangeIframe('AddAccident', 'accidentID=' + accidentID);
+        }
+    </script>
+</head>
+<body>
+    <div>
+        <fieldset>
+            <legend><span class="field_leg">意外事件查看</span></legend>
+            <div class="select_where">
+                <span>姓名：</span>
+                <input type="text" id="name" class="smallInput"/>
+                <span class="ml_40">查询日期：</span>
+                <input type="text" id="beginDate" class="Wdate smallInput" readonly="readonly" onclick="WdatePicker({ dateFmt: 'yyyy-MM-dd' })" />
+                <span>至</span>
+                <input type="text" id="endDate" class="Wdate smallInput" readonly="readonly" onclick="WdatePicker({ dateFmt: 'yyyy-MM-dd' })" />
+                <span class="ml_40">意外类型：</span>
+                <select id="accidentType" class="smallSelect"></select>
+                <span class="ml_50"><input class="selectBtn" type="button" value="查询" onclick="getPage(1)"/></span>
+            </div>
+            <div id="accident_tb">
+            </div>
+        </fieldset>
+    </div>
+</body>
+</html>

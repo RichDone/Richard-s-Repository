@@ -1,0 +1,146 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>基础信息维护</title>
+    <meta charset="utf-8" />
+    <link href="../Css/style.css" rel="stylesheet" />
+    <script src="../Script/jquery-1.4.2.min.js"></script>
+    <script src="../times/WdatePicker.js"></script>
+    <script type="text/javascript">
+        var sortfield = "";
+        var sorttype = "";
+        var saveflag = "";
+        function setsort(_sortfield) {
+            if (sortfield != _sortfield) {
+                sorttype = "asc";
+                sortfield = _sortfield;
+            }
+            else {
+                if (sorttype == "asc") {
+                    sorttype = "desc";
+                }
+                else {
+                    sorttype = "asc";
+                }
+            }
+            var currentpage = $("#hid_currentpage").val();
+            getPage(currentpage);
+        }
+        //跳转页面
+        function pagespress() {
+            var k = window.event.keyCode;
+            if ((k == 46) || (k == 8) || (k >= 48 && k <= 57) || (k >= 96 && k <= 105) || (k >= 37 && k <= 40)) {
+            }
+            else if (k == 13) {
+                var topage = $("#txt_topages").val();
+                if (topage != '0') {
+                    if (parseInt(topage, 10) > parseInt($("#hid_totalpage").val(), 10)) {
+                        topage = $("#hid_totalpage").val();
+                        $("#txt_topages").val(topage);
+                    }
+                    getPage(topage);
+                }
+            }
+            else {
+                window.event.returnValue = false;
+            }
+        }
+        //点击GO按钮进行翻页动作
+        function pagespressForGo() {
+            var topage = $("#txt_topages").val();
+            if (topage != '0') {
+                if (parseInt(topage, 10) > parseInt($("#hid_totalpage").val(), 10)) {
+                    topage = $("#hid_totalpage").val();
+                    $("#txt_topages").val(topage);
+                }
+                getPage(topage);
+            }
+        }
+        $(document).ready(function () {
+            getPage(1);
+        });
+        function getPage(currentpage) {
+            var pagesize = "10";
+            if ($("#sel_pagesize").val() != "" && typeof ($("#sel_pagesize").val()) != "undefined") { pagesize = $("#sel_pagesize").val(); }
+            var querydata = "&currentpage=" + currentpage + "&pagesize=" + pagesize + "&sortfield=" + sortfield + "&sorttype=" + sorttype;
+            $.ajax(
+            {
+                type: "GET",
+                url: "../MainHandler.ashx?action=getRecordPage_AccidentType",
+                dataType: 'text',
+                data: encodeURI(querydata),
+                success: function (result) {
+                    $("#accidentType_tb").html(result);
+                    //设置iframe高度
+                    var iframeHeight = $("#iframInfo", window.parent.document).contents().find("body").height();
+                    $("#iframInfo", window.parent.document).height(iframeHeight);
+                }
+            });
+        }
+        function AddAccidentType() {
+            var accidentTypeName = $("#accidentTypeName").val();
+            if (accidentTypeName == "") {
+                alert("请输入事故类型！");
+                return false;
+            }
+            var querydata = "&accidentTypeName=" + accidentTypeName;
+            $.ajax(
+            {
+                type: "GET",
+                url: "../MainHandler.ashx?action=AddAccidentType",
+                dataType: 'text',
+                data: encodeURI(querydata),
+                success: function (result) {
+                    if (result != null && result != "") {
+                        if (result == "exists") {
+                            alert("记录已重复，请重新添加！");
+                        }
+                        else if (parseInt(result) > 0) {
+                            alert("添加事故类型成功！");
+                            $("#accidentTypeName").val("");
+                            getPage(1);
+                        }
+                        else {
+                            alert("添加事故类型异常，请重新添加！");
+                        }
+                    }
+                }
+            });
+        }
+        function DeleteAccidentType(accidentTypeID) {
+            var querydata = "&accidentTypeID=" + accidentTypeID;
+            $.ajax(
+            {
+                type: "GET",
+                url: "../MainHandler.ashx?action=DeleteAccidentType",
+                dataType: 'text',
+                data: encodeURI(querydata),
+                success: function (result) {
+                    if (result != null && result != "") {
+                        if (parseInt(result) > 0) {
+                            alert("删除事故类型成功！");
+                            getPage(1);
+                        }
+                        else {
+                            alert("删除事故类型异常，请重新操作！");
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+</head>
+<body>
+    <fieldset>
+        <legend><span class="field_leg">基础信息维护</span></legend>
+        <div class="select_where">
+            <span>事故类型：</span>
+            <input type="text" id="accidentTypeName" class="normalInput" />
+            <span class="ml_50"><input class="saveBtn" type="button" value="添加" onclick="AddAccidentType()" /></span>
+        </div>
+        <div id="accidentType_tb">
+        </div>
+    </fieldset>
+</body>
+</html>

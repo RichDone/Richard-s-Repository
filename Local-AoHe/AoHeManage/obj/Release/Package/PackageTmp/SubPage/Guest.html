@@ -1,0 +1,280 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>客人信息管理</title>
+    <meta charset="utf-8" />
+    <script src="../Script/global.js"></script>
+    <link href="../Css/style.css" rel="stylesheet" />
+    <script src="../Script/jquery-1.4.2.min.js"></script>
+    <script src="../times/WdatePicker.js"></script>
+    <script type="text/javascript">
+        $(function () {
+            getPage(1);
+            //设置iframe高度
+            var iframeHeight = $("#iframInfo", window.parent.document).contents().find("body").height();
+            $("#iframInfo", window.parent.document).height(iframeHeight);
+        })
+        var sortfield = "";
+        var sorttype = "";
+        var saveflag = "";
+        function setsort(_sortfield) {
+            if (sortfield != _sortfield) {
+                sorttype = "asc";
+                sortfield = _sortfield;
+            }
+            else {
+                if (sorttype == "asc") {
+                    sorttype = "desc";
+                }
+                else {
+                    sorttype = "asc";
+                }
+            }
+            var currentpage = $("#hid_currentpage").val();
+            getPage(currentpage);
+        }
+        //跳转页面
+        function pagespress() {
+            var k = window.event.keyCode;
+            if ((k == 46) || (k == 8) || (k >= 48 && k <= 57) || (k >= 96 && k <= 105) || (k >= 37 && k <= 40)) {
+            }
+            else if (k == 13) {
+                var topage = $("#txt_topages").val();
+                if (topage != '0') {
+                    if (parseInt(topage, 10) > parseInt($("#hid_totalpage").val(), 10)) {
+                        topage = $("#hid_totalpage").val();
+                        $("#txt_topages").val(topage);
+                    }
+                    getPage(topage);
+                }
+            }
+            else {
+                window.event.returnValue = false;
+            }
+        }
+        //点击GO按钮进行翻页动作
+        function pagespressForGo() {
+            var topage = $("#txt_topages").val();
+            if (topage != '0') {
+                if (parseInt(topage, 10) > parseInt($("#hid_totalpage").val(), 10)) {
+                    topage = $("#hid_totalpage").val();
+                    $("#txt_topages").val(topage);
+                }
+                getPage(topage);
+            }
+        }
+        function getPage(currentpage) {
+            ChangeShowPage('guest_list', 'guest_add');
+            var pagesize = "10";
+            var guestName = $("#guestName").val();
+            if ($("#sel_pagesize").val() != "" && typeof ($("#sel_pagesize").val()) != "undefined") { pagesize = $("#sel_pagesize").val(); }
+            var querydata = "&guestName=" + guestName + "&currentpage=" + currentpage + "&pagesize=" + pagesize + "&sortfield=" + sortfield + "&sorttype=" + sorttype;
+            $.ajax(
+            {
+                type: "GET",
+                url: "../MainHandler.ashx?action=getRecordPage_GuestInfo",
+                dataType: 'text',
+                data: encodeURI(querydata),
+                success: function (result) {
+                    $("#guest_tb").html(result);
+                    //设置iframe高度
+                    var iframeHeight = $("#iframInfo", window.parent.document).contents().find("body").height();
+                    $("#iframInfo", window.parent.document).height(iframeHeight);
+                }
+            });
+        }
+        function Save() {
+            var ID = $("#ID").val();
+            var name = $("#name").val();
+            var sex = $("#sex").val();
+            var age = $("#age").val();
+            var roomNo = $("#roomNo").val();
+            var bedNo = $("#bedNo").val();
+            var nurseLevel = $("#nurseLevel").val();
+            var IDCardNo = $("#IDCardNo").val();
+            var admissionDate = $("#admissionDate").val();
+            var remark = $("#remark").html();
+            //验证非空
+            if (name == "") {
+                alert("请输入姓名！");
+                return false;
+            }
+            if (age == "") {
+                alert("请输入年龄！");
+                return false;
+            }
+            if (IDCardNo == "") {
+                alert("请输入身份证号！");
+                return false;
+            }
+            if (roomNo == "") {
+                alert("请输入房间号！");
+                return false;
+            }
+            if (bedNo == "") {
+                alert("请输入床位号！");
+                return false;
+            }
+            if (nurseLevel == "") {
+                alert("请选择护理等级！");
+                return false;
+            }
+            if (admissionDate == "") {
+                alert("请输入入院日期！");
+                return false;
+            }
+            if (remark != "") {
+                if (remark.indexOf("~") > -1 || remark.indexOf("*") > -1 ||
+                remark.indexOf("^") > -1 || remark.indexOf("$") > -1) {
+                    alert("疾病和用药栏备注中不能包含\"~\"、\"*\"、\"^\"、\"$\"等特殊字符!");
+                    return false;
+                }
+            }
+            var querydata = "&remark=" + remark + "&ID=" + ID + "&admissionDate=" + admissionDate + "&IDCardNo=" + IDCardNo + "&name=" + name + "&sex=" + sex + "&age=" + age + "&roomNo=" + roomNo + "&bedNo=" + bedNo + "&nurseLevel=" + nurseLevel + "&saveflag=" + saveflag;;
+            $.ajax(
+            {
+                type: "GET",
+                url: "../MainHandler.ashx?action=SaveGuest",
+                dataType: 'text',
+                data: encodeURI(querydata),
+                success: function (result) {
+                    if (result != null && result != "") {
+                        if (parseInt(result) > 0) {
+                            alert("保存客人成功！");
+                            getPage(1);
+                        }
+                        else {
+                            alert("保存客人失败，请重新操作！");
+                        }
+                    }
+                }
+            });
+        }
+        function GetGuestfo(ID) {
+            var querydata = "&ID=" + ID;
+            $.ajax(
+            {
+                type: "GET",
+                url: "../MainHandler.ashx?action=GetGuestInfoByID",
+                dataType: 'json',
+                data: encodeURI(querydata),
+                success: function (result) {
+                    if (result != null && result != "") {
+                        $("#ID").val(result.ID);
+                        $("#name").val(result.Name);
+                        $("#sex").val(result.Sex);
+                        $("#age").val(result.Age);
+                        $("#roomNo").val(result.RoomNo);
+                        $("#bedNo").val(result.BedNo);
+                        $("#IDCardNo").val(result.IDCardNo);
+                        $("#nurseLevel").val(result.NurseLevel);
+                        var admissionDate = new Date(parseInt(result.AdmissionDate.substr(6))).ToString("yyyy-MM-dd");
+                        $("#admissionDate").val(admissionDate);
+                        $("#remark").html(result.Remark);
+                    }
+                    else {
+                        alert("未查询到数据！");
+                        return false;
+                    }
+                }
+            });
+        }
+        function ChangeShowPage(showID, hideID) {
+            $("#" + showID).show();
+            $("#" + hideID).hide();
+            //设置iframe高度
+            var iframeHeight = $("#iframInfo", window.parent.document).contents().find("body").height();
+            $("#iframInfo", window.parent.document).height(iframeHeight);
+        }
+        function ShowInsertPage(flag, ID) {
+            saveflag = flag;
+            if (saveflag == "add") {
+                $("#guest_add .normalInput").val('');
+                $("#guest_add .normalSelect").val('');
+                $("#guest_add .remark").html('');
+                $("#guest_add .notallow_edit").attr("disabled", false);
+            }
+            if (saveflag == "edit") {
+                GetGuestfo(ID);
+                $("#guest_add .notallow_edit ").attr("disabled", true);
+            }
+            ChangeShowPage('guest_add', 'guest_list')
+        }
+    </script>
+</head>
+<body>
+    <div id="guest_list">
+        <fieldset>
+            <legend><span class="field_leg">客人查询</span></legend>
+            <div class="select_where">
+                <span>姓名搜索：</span>
+                <input type="text" id="guestName" class="normalInput" />
+                <span class="ml_50"><input class="selectBtn" type="button" value="查询" onclick="getPage(1)" /></span>
+                <span class="ml_50"><input class="selectBtn" type="button" value="新增" onclick="ShowInsertPage('add')" /></span>
+            </div>
+            <div id="guest_tb">
+            </div>
+        </fieldset>
+    </div>
+    <div id="guest_add" style="display:none">
+        <fieldset>
+            <legend><span class="field_leg">员工录入</span></legend>
+            <div>
+                <table class="insert_tb" cellpadding="5" cellspacing="5">
+                    <tr>
+                        <td>姓名：</td>
+                        <td>
+                            <input type="text" id="name" class="normalInput notallow_edit" />
+                            <input type="hidden" id="ID" />
+                        </td>
+                        <td>性别：</td>
+                        <td>
+                            <select id="sex" class="normalSelect">
+                                <option value="0">男</option>
+                                <option value="1">女</option>
+                            </select>
+                        </td>
+                        <td>年龄：</td>
+                        <td><input type="text" id="age" class="normalInput" /></td>
+                    </tr>
+                    <tr>
+                        <td>房间号：</td>
+                        <td><input id="roomNo" class="normalInput" type="text" /></td>
+                        <td>床位号：</td>
+                        <td><input id="bedNo" class="normalInput" type="text" /></td>
+                        <td>身份证号：</td>
+                        <td><input id="IDCardNo" class="normalInput notallow_edit" type="text" /></td>
+                    </tr>
+                    <tr>
+                        <td>护理等级：</td>
+                        <td>
+                            <select id="nurseLevel" class="normalSelect">
+                                <option value="">请选择</option>
+                                <option value="专一">专一</option>
+                                <option value="专二">专二</option>
+                                <option value="专三">专三</option>
+                                <option value="专四">专四</option>
+                            </select>
+                        </td>
+                        <td>入院日期：</td>
+                        <td>
+                            <input type="text" id="admissionDate" class="Wdate" readonly="readonly" onclick="WdatePicker({ dateFmt: 'yyyy-MM-dd' })" />
+                        </td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>疾病和用药栏：</td>
+                        <td colspan="3"><textarea id="remark" cols="40" rows="5"></textarea></td>
+                    </tr>
+                </table>
+                <div class="footLineBtn">
+                    <input type="button" value="返回" class="saveBtn" onclick="ChangeShowPage('guest_list','guest_add')" />
+                    <input type="button" value="保存" class="saveBtn ml_20" onclick="Save()" />
+                </div>
+            </div>
+        </fieldset>
+    </div>
+</body>
+</html>

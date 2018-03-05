@@ -1,0 +1,70 @@
+C:\Users\Administrator\documents\visual studio 2015\Projects\AoHeManage\AoHeManage\bin\ApplicationInsights.config
+C:\Users\Administrator\documents\visual studio 2015\Projects\AoHeManage\AoHeManage\bin\roslyn\csc.exe
+C:\Users\Administrator\documents\visual studio 2015\Projects\AoHeManage\AoHeManage\bin\roslyn\Microsoft.Build.Tasks.CodeAnalysis.dll
+C:\Users\Administrator\documents\visual studio 2015\Projects\AoHeManage\AoHeManage\bin\roslyn\Microsoft.CodeAnalysis.CSharp.dll
+C:\Users\Administrator\documents\visual studio 2015\Projects\AoHeManage\AoHeManage\bin\roslyn\Microsoft.CodeAnalysis.dll
+C:\Users\Administrator\documents\visual studio 2015\Projects\AoHeManage\AoHeManage\bin\roslyn\Microsoft.CodeAnalysis.VisualBasic.dll
+C:\Users\Administrator\documents\visual studio 2015\Projects\AoHeManage\AoHeManage\bin\roslyn\Microsoft.CSharp.Core.targets
+C:\Users\Administrator\documents\visual studio 2015\Projects\AoHeManage\AoHeManage\bin\roslyn\Microsoft.VisualBasic.Core.targets
+C:\Users\Administrator\documents\visual studio 2015\Projects\AoHeManage\AoHeManage\bin\roslyn\System.Collections.Immutable.dll
+C:\Users\Administrator\documents\visual studio 2015\Projects\AoHeManage\AoHeManage\bin\roslyn\System.Reflection.Metadata.dll
+C:\Users\Administrator\documents\visual studio 2015\Projects\AoHeManage\AoHeManage\bin\roslyn\vbc.exe
+C:\Users\Administrator\documents\visual studio 2015\Projects\AoHeManage\AoHeManage\bin\roslyn\VBCSCompiler.exe
+C:\Users\Administrator\documents\visual studio 2015\Projects\AoHeManage\AoHeManage\bin\roslyn\VBCSCompiler.exe.config
+C:\Users\Administrator\documents\visual studio 2015\Projects\AoHeManage\AoHeManage\bin\AoHeManage.dll.config
+C:\Users\Administrator\documents\visual studio 2015\Projects\AoHeManage\AoHeManage\bin\AoHeManage.dll
+C:\Users\Administrator\documents\visual studio 2015\Projects\AoHeManage\AoHeManage\bin\AoHeManage.pdb
+C:\Users\Administrator\documents\visual studio 2015\Projects\AoHeManage\AoHeManage\bin\Maticsoft.DBUtility.dll
+C:\Users\Administrator\documents\visual studio 2015\Projects\AoHeManage\AoHeManage\bin\Microsoft.AI.Agent.Intercept.dll
+C:\Users\Administrator\documents\visual studio 2015\Projects\AoHeManage\AoHeManage\bin\Microsoft.AI.DependencyCollector.dll
+C:\Users\Administrator\documents\visual studio 2015\Projects\AoHeManage\AoHeManage\bin\Microsoft.AI.PerfCounterCollector.dll
+C:\Users\Administrator\documents\visual studio 2015\Projects\AoHeManage\AoHeManage\bin\Microsoft.AI.ServerTelemetryChannel.dll
+C:\Users\Administrator\documents\visual studio 2015\Projects\AoHeManage\AoHeManage\bin\Microsoft.AI.Web.dll
+C:\Users\Administrator\documents\visual studio 2015\Projects\AoHeManage\AoHeManage\bin\Microsoft.AI.WindowsServer.dll
+C:\Users\Administrator\documents\visual studio 2015\Projects\AoHeManage\AoHeManage\bin\Microsoft.ApplicationInsights.dll
+C:\Users\Administrator\documents\visual studio 2015\Projects\AoHeManage\AoHeManage\bin\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.dll
+C:\Users\Administrator\documents\visual studio 2015\Projects\AoHeManage\AoHeManage\bin\MySql.Data.dll
+C:\Users\Administrator\documents\visual studio 2015\Projects\AoHeManage\AoHeManage\bin\Microsoft.AI.DependencyCollector.xml
+C:\Users\Administrator\documents\visual studio 2015\Projects\AoHeManage\AoHeManage\bin\Microsoft.AI.ServerTelemetryChannel.xml
+C:\Users\Administrator\documents\visual studio 2015\Projects\AoHeManage\AoHeManage\bin\Microsoft.AI.Web.xml
+C:\Users\Administrator\documents\visual studio 2015\Projects\AoHeManage\AoHeManage\bin\Microsoft.AI.WindowsServer.xml
+C:\Users\Administrator\documents\visual studio 2015\Projects\AoHeManage\AoHeManage\bin\Microsoft.ApplicationInsights.xml
+C:\Users\Administrator\documents\visual studio 2015\Projects\AoHeManage\AoHeManage\bin\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.xml
+C:\Users\Administrator\documents\visual studio 2015\Projects\AoHeManage\AoHeManage\obj\Debug\AoHeManage.dll
+C:\Users\Administrator\documents\visual studio 2015\Projects\AoHeManage\AoHeManage\obj\Debug\AoHeManage.pdb
+C:\Users\Administrator\documents\visual studio 2015\Projects\AoHeManage\AoHeManage\obj\Debug\AoHeManage.csprojResolveAssemblyReference.cache
+G:\Local-AoHe\AoHeManage\bin\ApplicationInsights.config
+G:\Local-AoHe\AoHeManage\bin\roslyn\csc.exe
+G:\Local-AoHe\AoHeManage\bin\roslyn\Microsoft.Build.Tasks.CodeAnalysis.dll
+G:\Local-AoHe\AoHeManage\bin\roslyn\Microsoft.CodeAnalysis.CSharp.dll
+G:\Local-AoHe\AoHeManage\bin\roslyn\Microsoft.CodeAnalysis.dll
+G:\Local-AoHe\AoHeManage\bin\roslyn\Microsoft.CodeAnalysis.VisualBasic.dll
+G:\Local-AoHe\AoHeManage\bin\roslyn\Microsoft.CSharp.Core.targets
+G:\Local-AoHe\AoHeManage\bin\roslyn\Microsoft.VisualBasic.Core.targets
+G:\Local-AoHe\AoHeManage\bin\roslyn\System.Collections.Immutable.dll
+G:\Local-AoHe\AoHeManage\bin\roslyn\System.Reflection.Metadata.dll
+G:\Local-AoHe\AoHeManage\bin\roslyn\vbc.exe
+G:\Local-AoHe\AoHeManage\bin\roslyn\VBCSCompiler.exe
+G:\Local-AoHe\AoHeManage\bin\roslyn\VBCSCompiler.exe.config
+G:\Local-AoHe\AoHeManage\bin\AoHeManage.dll.config
+G:\Local-AoHe\AoHeManage\bin\AoHeManage.dll
+G:\Local-AoHe\AoHeManage\bin\AoHeManage.pdb
+G:\Local-AoHe\AoHeManage\bin\Maticsoft.DBUtility.dll
+G:\Local-AoHe\AoHeManage\bin\Microsoft.AI.Agent.Intercept.dll
+G:\Local-AoHe\AoHeManage\bin\Microsoft.AI.DependencyCollector.dll
+G:\Local-AoHe\AoHeManage\bin\Microsoft.AI.PerfCounterCollector.dll
+G:\Local-AoHe\AoHeManage\bin\Microsoft.AI.ServerTelemetryChannel.dll
+G:\Local-AoHe\AoHeManage\bin\Microsoft.AI.Web.dll
+G:\Local-AoHe\AoHeManage\bin\Microsoft.AI.WindowsServer.dll
+G:\Local-AoHe\AoHeManage\bin\Microsoft.ApplicationInsights.dll
+G:\Local-AoHe\AoHeManage\bin\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.dll
+G:\Local-AoHe\AoHeManage\bin\MySql.Data.dll
+G:\Local-AoHe\AoHeManage\bin\Microsoft.AI.DependencyCollector.xml
+G:\Local-AoHe\AoHeManage\bin\Microsoft.AI.ServerTelemetryChannel.xml
+G:\Local-AoHe\AoHeManage\bin\Microsoft.AI.Web.xml
+G:\Local-AoHe\AoHeManage\bin\Microsoft.AI.WindowsServer.xml
+G:\Local-AoHe\AoHeManage\bin\Microsoft.ApplicationInsights.xml
+G:\Local-AoHe\AoHeManage\bin\Microsoft.CodeDom.Providers.DotNetCompilerPlatform.xml
+G:\Local-AoHe\AoHeManage\obj\Debug\AoHeManage.dll
+G:\Local-AoHe\AoHeManage\obj\Debug\AoHeManage.pdb
+G:\Local-AoHe\AoHeManage\obj\Debug\AoHeManage.csprojResolveAssemblyReference.cache

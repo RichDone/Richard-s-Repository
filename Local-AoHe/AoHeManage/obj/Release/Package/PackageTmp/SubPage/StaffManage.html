@@ -1,0 +1,235 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>员工信息管理</title>
+    <meta charset="utf-8" />
+    <script src="../Script/global.js"></script>
+    <link href="../Css/style.css" rel="stylesheet" />
+    <script src="../Script/jquery-1.4.2.min.js"></script>
+    <script src="../times/WdatePicker.js"></script>
+    <script type="text/javascript">
+        $(function () {
+            InitPostLevel();
+            getPage(1);
+            //设置iframe高度
+            var iframeHeight = $("#iframInfo", window.parent.document).contents().find("body").height();
+            $("#iframInfo", window.parent.document).height(iframeHeight);
+        })
+        var sortfield = "";
+        var sorttype = "";
+        var saveflag = "";
+        function setsort(_sortfield) {
+            if (sortfield != _sortfield) {
+                sorttype = "asc";
+                sortfield = _sortfield;
+            }
+            else {
+                if (sorttype == "asc") {
+                    sorttype = "desc";
+                }
+                else {
+                    sorttype = "asc";
+                }
+            }
+            var currentpage = $("#hid_currentpage").val();
+            getPage(currentpage);
+        }
+        //跳转页面
+        function pagespress() {
+            var k = window.event.keyCode;
+            if ((k == 46) || (k == 8) || (k >= 48 && k <= 57) || (k >= 96 && k <= 105) || (k >= 37 && k <= 40)) {
+            }
+            else if (k == 13) {
+                var topage = $("#txt_topages").val();
+                if (topage != '0') {
+                    if (parseInt(topage, 10) > parseInt($("#hid_totalpage").val(), 10)) {
+                        topage = $("#hid_totalpage").val();
+                        $("#txt_topages").val(topage);
+                    }
+                    getPage(topage);
+                }
+            }
+            else {
+                window.event.returnValue = false;
+            }
+        }
+        //点击GO按钮进行翻页动作
+        function pagespressForGo() {
+            var topage = $("#txt_topages").val();
+            if (topage != '0') {
+                if (parseInt(topage, 10) > parseInt($("#hid_totalpage").val(), 10)) {
+                    topage = $("#hid_totalpage").val();
+                    $("#txt_topages").val(topage);
+                }
+                getPage(topage);
+            }
+        }
+        function getPage(currentpage) {
+            ChangeShowPage('staff_list', 'staff_add');
+            var pagesize = "10";
+            var staffName = $("#staffName").val();
+            if ($("#sel_pagesize").val() != "" && typeof ($("#sel_pagesize").val()) != "undefined") { pagesize = $("#sel_pagesize").val(); }
+            var querydata = "&staffName=" + staffName + "&currentpage=" + currentpage + "&pagesize=" + pagesize + "&sortfield=" + sortfield + "&sorttype=" + sorttype;
+            $.ajax(
+            {
+                type: "GET",
+                url: "../MainHandler.ashx?action=getRecordPage_StaffInfo",
+                dataType: 'text',
+                data: encodeURI(querydata),
+                success: function (result) {
+                    $("#staff_tb").html(result);
+                    //设置iframe高度
+                    var iframeHeight = $("#iframInfo", window.parent.document).contents().find("body").height();
+                    $("#iframInfo", window.parent.document).height(iframeHeight);
+                }
+            });
+        }
+        function Save() {
+            var ID = $("#ID").val();
+            var name = $("#name").val();
+            var sex = $("#sex").val();
+            var IDCardNo = $("#IDCardNo").val();
+            var postLevel = $("#postLevel").val();
+            //验证非空
+            if (name == "") {
+                alert("请输入姓名！");
+                return false;
+            }
+            if (IDCardNo == "") {
+                alert("请输入身份证号！");
+                return false;
+            }
+            if (postLevel == "") {
+                alert("请选择职级！");
+                return false;
+            }
+            var querydata = "&ID=" + ID + "&name=" + name + "&sex=" + sex + "&IDCardNo=" + IDCardNo + "&postLevel=" + postLevel + "&saveflag=" + saveflag;
+            $.ajax(
+            {
+                type: "GET",
+                url: "../MainHandler.ashx?action=SaveStaff",
+                dataType: 'text',
+                data: encodeURI(querydata),
+                success: function (result) {
+                    if (result != null && result != "") {
+                        if (parseInt(result) > 0) {
+                            alert("保存员工成功！");
+                            getPage(1);
+                        }
+                        else {
+                            alert("保存员工失败，请重新操作！");
+                        }
+                    }
+                }
+            });
+        }
+        function GetStaffInfo(ID) {
+            var querydata = "&ID=" + ID;
+            $.ajax(
+            {
+                type: "GET",
+                url: "../MainHandler.ashx?action=GetStaffInfoByID",
+                dataType: 'json',
+                data: encodeURI(querydata),
+                success: function (result) {
+                    if (result != null && result != "") {
+                        $("#ID").val(result.ID);
+                        $("#name").val(result.Name);
+                        $("#sex").val(result.Sex);
+                        $("#IDCardNo").val(result.IDCardNo);
+                        $("#postLevel").val(result.PostLevel);
+                    }
+                    else {
+                        alert("未查询到数据！");
+                        return false;
+                    }
+                }
+            });
+        }
+        function InitPostLevel() {
+            $.ajax(
+           {
+               type: "GET",
+               url: "../MainHandler.ashx?action=InitSelect_PostLevel",
+               dataType: 'text',
+               success: function (result) {
+                   if (result != null && result != "" && result.length > 0) {
+                       $("#staff_add #postLevel").append(result);
+                       $("#staff_edit #postLevel").append(result);
+                   }
+               }
+           });
+        }
+        function ChangeShowPage(showID, hideID) {
+            $("#" + showID).show();
+            $("#" + hideID).hide();
+            //设置iframe高度
+            var iframeHeight = $("#iframInfo", window.parent.document).contents().find("body").height();
+            $("#iframInfo", window.parent.document).height(iframeHeight);
+        }
+        function ShowInsertPage(flag, ID) {
+            saveflag = flag;
+            if (saveflag == "add") {
+                $("#staff_add .normalInput").val('');
+                $("#staff_add .normalSelect").val('');
+                $("#staff_add .notallow_edit").attr("disabled", false);
+            }
+            if (saveflag == "edit") {
+                GetStaffInfo(ID);
+                $("#staff_add .notallow_edit ").attr("disabled", true);
+            }
+            ChangeShowPage('staff_add', 'staff_list')
+        }
+    </script>
+</head>
+<body>
+    <div id="staff_list">
+        <fieldset>
+            <legend><span class="field_leg">员工查询</span></legend>
+            <div class="select_where">
+                <span>姓名搜索：</span>
+                <input type="text" id="staffName" class="normalInput" />
+                <span class="ml_50"><input class="selectBtn" type="button" value="查询" onclick="getPage(1)" /></span>
+                <span class="ml_50"><input class="selectBtn" type="button" value="新增" onclick="ShowInsertPage('add')" /></span>
+            </div>
+            <div id="staff_tb">
+            </div>
+        </fieldset>
+    </div>
+    <div id="staff_add" style="display:none">
+        <fieldset>
+            <legend><span class="field_leg">员工录入</span></legend>
+            <div>
+                <table class="insert_tb" cellpadding="5" cellspacing="5">
+                    <tr>
+                        <td>姓名：</td>
+                        <td>
+                            <input type="text" id="name" class="normalInput notallow_edit" />
+                            <input type="hidden" id="ID"/>
+                        </td>
+                        <td>性别：</td>
+                        <td>
+                            <select id="sex" class="normalSelect">
+                                <option value="0">男</option>
+                                <option value="1">女</option>
+                            </select>
+                        </td>
+                        <td>身份证号：</td>
+                        <td><input type="text" id="IDCardNo" class="normalInput notallow_edit" /></td>
+                    </tr>
+                    <tr>
+                        <td>职级：</td>
+                        <td><select id="postLevel" class="normalSelect"></select></td>
+                    </tr>
+                </table>
+                <div class="footLineBtn">
+                    <input type="button" value="返回" class="saveBtn" onclick="ChangeShowPage('staff_list', 'staff_add')" />
+                    <input type="button" value="保存" class="saveBtn ml_20" onclick="Save()" />
+                </div>
+            </div>
+        </fieldset>
+    </div>
+
+</body>
+</html>

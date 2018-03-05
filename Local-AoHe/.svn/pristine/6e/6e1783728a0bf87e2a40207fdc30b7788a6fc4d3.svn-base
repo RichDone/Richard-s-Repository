@@ -1,0 +1,248 @@
+﻿body {
+    background-color:lightblue;
+}
+.lineShow{
+    font-size:20px;
+    font-weight:bold;
+    margin:0 auto;
+    width:60%;
+    text-align:center;
+    margin-bottom:8px;
+}
+.wrap{
+    margin:15px auto;
+    width:80%;
+}
+.head{
+    margin:0 auto;
+    width:90%;
+}
+.head table{
+    font-size:12px;
+    border-top:1px solid black;
+    border-left:1px solid black;
+    border-right:1px solid black;
+    width:90%;
+    margin:0 auto;
+}
+.head table tr td{
+    height:30px;
+    line-height:30px;
+    border-bottom:1px solid black;
+    text-align:center;
+}
+.head table tr th{
+    font-size:13px;
+    font-weight:bold;
+    text-align:center;
+    border-right:1px solid black;
+    border-bottom:1px solid black;
+}
+.head select{
+    height:25px;
+    width:120px;
+}
+.main{
+    margin-top:10px;
+    width:100%;
+    overflow:hidden;
+}
+.normalBtn{
+    font-size:12px;
+    height:20px;
+    width:80px;
+    border-radius:25px;
+    cursor:pointer;
+}
+.bigBtn{
+    font-size:12px;
+    height:20px;
+    width:120px;
+    border-radius:25px;
+    cursor:pointer;
+}
+.saveBtn {
+    font-size: 12px;
+    height: 25px;
+    width: 80px;
+    color: white;
+    background-color: #4876FF;
+    border: 1px solid #4876FF;
+    cursor: pointer;
+    border-radius: 20px;
+}
+.confirmBtn{
+    font-size:12px;
+    height:25px;
+    width:50px;
+    color:white;
+    background-color:#4876FF;
+    border:1px solid #4876FF;
+    cursor:pointer;
+}
+.confirmBtn_s{
+    font-size:12px;
+    height:25px;
+    width:40px;
+    color:white;
+    background-color:#4876FF;
+    border:1px solid #4876FF;
+    cursor:pointer;
+}
+.selectBtn{
+    font-size:12px;
+    height:25px;
+    width:70px;
+    cursor:pointer;
+}
+.fl{
+    float:left;
+}
+.fr{
+    float:right;
+}
+.ml_50{
+    margin-left:50px;
+}
+.ml_40{
+    margin-left:40px;
+}
+.ml_20{
+    margin-left:20px;
+}
+.mt_5{
+    margin-top:5px;
+}
+.ml_5{
+    margin-left:5px;
+}
+.normalInput{
+    width:150px;
+    height:20px;
+}
+.bigInput{
+    width:180px;
+    height:20px;
+}
+.smallInput{
+    width:110px;
+    height:20px;
+}
+.normalSelect{
+    width:150px;
+    height:20px;
+}
+.smallSelect{
+    width:110px;
+    height:20px;
+}
+
+.list_tb{
+    border-top:1px solid black;
+    border-left:1px solid black;
+    border-bottom:1px solid black;
+    font-size:12px;
+    width:90%;
+    margin:0 auto;
+}
+.list_tb tr th{
+    border-top:1px solid black;
+    border-right:1px solid black;
+    text-align:center;
+    height:30px;
+    line-height:30px;
+    font-weight:bold;
+    background-color:lightgray;
+}
+.list_tb tr td{
+    border-top:1px solid black;
+    border-right:1px solid black;
+    text-align:center;
+    height:25px;
+    line-height:18px;
+}
+.insert_tb{
+    font-size:12px;
+    margin:0 auto;
+    width:90%;
+}
+.field_leg{
+    font-size:14px;
+    font-weight:bold;
+    padding:5px 10px;
+}
+.select_where{
+    width:90%;
+    font-size:12px;
+    margin-left:50px;
+    margin-bottom:15px;
+    margin-top:10px;
+}
+#div_nav{
+    font-size:12px;
+    margin-top:10px;
+}
+#div_nav table{
+    float:right;
+    width:70%;
+}
+.iframe{
+    width:99%;
+    border:0px;
+}
+.footLineBtn{
+    width:90%;
+    margin-left:80%;
+    margin-top:10px;
+    margin-bottom:10px;
+}
+.choose_list{
+    position:absolute;
+    padding:0;
+    z-index:1;
+    list-style:none;
+    margin-top:5px;
+}
+.choose_list li{
+    width:160px;
+    background-color:lightgray;
+    padding:3px 5px;
+    cursor:pointer;
+}
+.choose_list li:hover{
+    background-color:gray;
+}
+.font_weight{
+    font-weight:bold;
+}
+.input_dowm{
+    position:absolute;
+    margin-top:5px;
+}
+.relatedPerson{
+    width:200px;
+    border:1px solid black;
+    height:50px;
+    background-color:lightgray;
+    line-height:25px;
+}
+.choosedPerson{
+    padding:2px 3px;
+    background-color:gray;
+    color:black;
+    margin-left:5px;
+    cursor:pointer;
+}
+.span_close{
+    font-size:20px;
+    color:red;
+}
+.bg_red{
+    background-color:red;
+}
+.bg_orange{
+    background-color:orange;
+}
+.bg_yellow{
+    background-color:yellow;
+}

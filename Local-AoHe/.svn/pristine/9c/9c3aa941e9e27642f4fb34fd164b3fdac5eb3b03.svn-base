@@ -1,0 +1,460 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>排班模板维护</title>
+    <meta charset="utf-8" />
+    <script src="../Script/global.js"></script>
+    <link href="../Css/style.css" rel="stylesheet" />
+    <script src="../Script/jquery-1.4.2.min.js"></script>
+    <script src="../times/WdatePicker.js"></script>
+    <script type="text/javascript">
+        $(function () {
+            getPage(1);
+            //设置iframe高度
+            var iframeHeight = $("#iframInfo", window.parent.document).contents().find("body").height();
+            $("#iframInfo", window.parent.document).height(iframeHeight);
+        })
+        var sortfield = "";
+        var sorttype = "";
+        var saveflag = "";
+        function AutoIframeHeight() {
+            //设置iframe高度
+            var iframeHeight = $("#iframInfo", window.parent.document).contents().find("body").height();
+            $("#iframInfo", window.parent.document).height(iframeHeight);
+        }
+        function setsort(_sortfield) {
+            if (sortfield != _sortfield) {
+                sorttype = "asc";
+                sortfield = _sortfield;
+            }
+            else {
+                if (sorttype == "asc") {
+                    sorttype = "desc";
+                }
+                else {
+                    sorttype = "asc";
+                }
+            }
+            var currentpage = $("#hid_currentpage").val();
+            getPage(currentpage);
+        }
+        //跳转页面
+        function pagespress() {
+            var k = window.event.keyCode;
+            if ((k == 46) || (k == 8) || (k >= 48 && k <= 57) || (k >= 96 && k <= 105) || (k >= 37 && k <= 40)) {
+            }
+            else if (k == 13) {
+                var topage = $("#txt_topages").val();
+                if (topage != '0') {
+                    if (parseInt(topage, 10) > parseInt($("#hid_totalpage").val(), 10)) {
+                        topage = $("#hid_totalpage").val();
+                        $("#txt_topages").val(topage);
+                    }
+                    getPage(topage);
+                }
+            }
+            else {
+                window.event.returnValue = false;
+            }
+        }
+        //点击GO按钮进行翻页动作
+        function pagespressForGo() {
+            var topage = $("#txt_topages").val();
+            if (topage != '0') {
+                if (parseInt(topage, 10) > parseInt($("#hid_totalpage").val(), 10)) {
+                    topage = $("#hid_totalpage").val();
+                    $("#txt_topages").val(topage);
+                }
+                getPage(topage);
+            }
+        }
+        function getPage(currentpage) {
+            ChangeShowPage('template_list', 'template_add');
+            var pagesize = "10";
+            var queryTemplateName = $("#queryTemplateName").val();
+            if ($("#sel_pagesize").val() != "" && typeof ($("#sel_pagesize").val()) != "undefined") { pagesize = $("#sel_pagesize").val(); }
+            var querydata = "&queryTemplateName=" + queryTemplateName + "&currentpage=" + currentpage + "&pagesize=" + pagesize + "&sortfield=" + sortfield + "&sorttype=" + sorttype;
+            $.ajax(
+            {
+                type: "GET",
+                url: "../MainHandler.ashx?action=getRecordPage_SchedualTemplate",
+                dataType: 'text',
+                data: encodeURI(querydata),
+                success: function (result) {
+                    $("#guest_tb").html(result);
+                    //设置iframe高度
+                    var iframeHeight = $("#iframInfo", window.parent.document).contents().find("body").height();
+                    $("#iframInfo", window.parent.document).height(iframeHeight);
+                }
+            });
+        }
+        function SaveSchedualTemplate() {
+            Loading("请稍等几秒钟...");
+            var ID = $("#ID").val();
+            var templateName = $("#templateName").val();
+            var status = $("#status").val();
+            var templateRemark = $("#templateRemark").html();
+            //验证非空
+            if (templateName == "") {
+                alert("请输入模板名称！");
+                return false;
+            }
+            if (templateRemark != "") {
+                if (templateRemark.indexOf("~") > -1 || templateRemark.indexOf("*") > -1 ||
+                templateRemark.indexOf("^") > -1 || templateRemark.indexOf("$") > -1) {
+                    alert("模板说明中不能包含\"~\"、\"*\"、\"^\"、\"$\"等特殊字符!");
+                    return false;
+                }
+            }
+            var roomList = "";
+            $("input:checkbox[name='checkbox_room']:checked").each(function () {
+                roomList += $(this).val() + ",";
+            });
+            if (roomList == "") {
+                alert("请选择房间号！");
+                return false;
+            }
+            var models = [];
+            var table = $("#schedualTemp").find("table").eq(0);
+            var tr = table.find("tr").eq(1);
+            var tds = tr.find("td");
+            for (var j = 0; j < tds.length; j++) {
+                //获取班次模板内容（时间和备注）period,remark
+                var schedual = tds.eq(j).find(".period").eq(0).html();
+                var remark = tds.eq(j).find(".remark").eq(0).html();
+                var model = {
+                    "TemplateID": 0,
+                    "WhichDay": parseInt(j + 1),
+                    "Schedual": schedual,
+                    "Remark": remark,
+                }
+                models.push(model);
+            }
+            var querydata = "&ID=" + ID + "&templateName=" + templateName + "&status=" + status + "&templateRemark=" + templateRemark
+                + "&roomList=" + roomList + "&listTemplateMapping=" + thistoString(models) + "&saveflag=" + saveflag;
+            $.ajax({
+                type: "post",
+                url: "../MainHandler.ashx?action=AddSchedualTemplate",
+                dataType: 'text',
+                data: encodeURI(querydata),
+                success: function (result) {
+                    if (result != null && result != "") {
+                        if (isNaN(result)) {
+                            alert(result);
+                            UnLoading();
+                        }
+                        else {
+                            if (parseInt(result) > 0) {
+                                alert("添加排班模板成功！");
+                                UnLoading();
+                                getPage(1);
+                            }
+                            else {
+                                alert("添加排班模板异常，请重新填写！");
+                                UnLoading();
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        function GetSchedualTemplate(ID) {
+            var querydata = "&ID=" + ID;
+            $.ajax(
+            {
+                type: "GET",
+                url: "../MainHandler.ashx?action=GetSchedualTemplateByID",
+                dataType: 'json',
+                data: encodeURI(querydata),
+                success: function (result) {
+                    if (result != null && result != "") {
+                        $("#ID").val(result.ID);
+                        $("#templateName").val(result.TemplateName);
+                        $("#status").val(result.Status);
+                        $("#templateRemark").html(result.TemplateRemark);
+                        var roomList = result.RoomList;
+                        var listTemplateMapping = result.ListTemplateMapping;
+                        InitAllRoom(roomList);
+                        //初始化排班明细
+                        $("#schedualTemp").html("");
+                        var tbHtml = "";
+                        tbHtml += "<table cellspacing='0' cellpadding='0' class='list_tb tb_fix'>";
+                        for (var i = 1; i <= 31; i++) {
+                            tbHtml += "<th style='width:130px'>" + i + "日</th>";
+                        }
+                        tbHtml += "<tr>";
+                        for (var i = 0; i < listTemplateMapping.length; i++) {
+                            var period = listTemplateMapping[i].Schedual;
+                            var remark = listTemplateMapping[i].Remark;
+                            tbHtml += "<td style='height:40px;' ondblclick='ChangeSchedual(this)'><span class='period'>" + period + "</span><span class='remark'>" + remark + "</span></td>";
+                        }
+                        tbHtml += "</tr></table>";
+                        $("#schedualTemp").html(tbHtml);
+                    }
+                    else {
+                        alert("未查询到数据！");
+                        return false;
+                    }
+                }
+            });
+        }
+        function ChangeShowPage(showID, hideID) {
+            $("#" + showID).show();
+            $("#" + hideID).hide();
+            //设置iframe高度
+            var iframeHeight = $("#iframInfo", window.parent.document).contents().find("body").height();
+            $("#iframInfo", window.parent.document).height(iframeHeight);
+        }
+        function ShowInsertPage(flag, ID) {
+            saveflag = flag;
+            if (saveflag == "add") {
+                $("#template_add .normalInput").val('');
+                $("#template_add .normalSelect").val('');
+                $("#remark").html('');
+                $("#template_add .notallow_edit").attr("disabled", false);
+                $("#ID").val("");
+                $("#templateName").val("");
+                $("#status").val("0");
+                InitAllRoom();
+                //初始化排班明细
+                $("#schedualTemp").html("");
+                var tbHtml = "";
+                tbHtml += "<table cellspacing='0' cellpadding='0' class='list_tb tb_fix'>";
+                for (var i = 1; i <= 31; i++) {
+                    tbHtml += "<th style='width:130px'>" + i + "日</th>";
+                }
+                tbHtml += "<tr>";
+                for (var i = 1; i <= 31; i++) {
+                    tbHtml += "<td style='height:40px;' ondblclick='ChangeSchedual(this)'><span class='period'></span><span class='remark'></span></td>";
+                }
+                tbHtml += "</tr></table>";
+                $("#schedualTemp").html(tbHtml);
+            }
+            if (saveflag == "edit") {
+                GetSchedualTemplate(ID);
+                $("#template_add .notallow_edit ").attr("disabled", true);
+            }
+            ChangeShowPage('template_add', 'template_list')
+        }
+        function InitAllRoom(paramRooms) {
+            var roomList = [];
+            if (paramRooms) {
+                if (paramRooms.indexOf(",") > -1) {
+                    for (var i = 0; i < paramRooms.split(",").length; i++) {
+                        roomList.push(paramRooms.split(",")[i]);
+                    }
+                }
+            }
+            $("#ul_Room_two").empty();
+            $("#ul_Room_four").empty();
+            $("#ul_Room_five").empty();
+            $.ajax({
+                type: "GET",
+                url: "../MainHandler.ashx?action=GetAllRoom",
+                dataType: 'json',
+                success: function (result) {
+                    if (result != null && result != "" && result.length > 0) {
+                        for (var i = 0; i < result.length; i++) {
+                            var ifChecked = "";
+                            var roomNo = result[i].RoomNo;
+                            if (paramRooms && roomList.length > 0) {
+                                if ($.inArray(roomNo, roomList) != -1) {
+                                    ifChecked = "checked='checked'";
+                                }
+                            }
+                            if (result[i].FloorID == 2 || result[i].FloorID == "2") {
+                                var li = $("<li><input type='checkbox' " + ifChecked + " name='checkbox_room' value='" + roomNo + "'/><span>" + roomNo + "</span></li>");
+                                $("#ul_Room_two").append(li);
+                            }
+                            if (result[i].FloorID == 4 || result[i].FloorID == "4") {
+                                var li = $("<li><input type='checkbox' " + ifChecked + " name='checkbox_room' value='" + roomNo + "'/><span>" + roomNo + "</span></li>");
+                                $("#ul_Room_four").append(li);
+                            }
+                            if (result[i].FloorID == 5 || result[i].FloorID == "5") {
+                                var li = $("<li><input type='checkbox' " + ifChecked + " name='checkbox_room' value='" + roomNo + "'/><span>" + roomNo + "</span></li>");
+                                $("#ul_Room_five").append(li);
+                            }
+                        }
+                    }
+                    AutoIframeHeight();
+                }
+            });
+        }
+        function ChangeSchedual(obj) {
+            //初始化
+            $("#beginDate_a").val("");
+            $("#endDate_a").val("");
+            $("#beginDate_b").val("");
+            $("#endDate_b").val("");
+            $("#remark").val("");
+            $("#rest").attr("checked", false);
+
+            Loading();
+            //获取原数据
+            var period = $(obj).find(".period").html();
+            var remark = $(obj).find(".remark").html();
+            $("#remark").html(remark);
+            //是否两个阶段
+            if (period.indexOf("/") >= 0) {
+                var period_a = period.split("/")[0];
+                var period_b = period.split("/")[1];
+                var begin_a = period_a.split("-")[0];
+                var end_a = period_a.split("-")[1];
+                var begin_b = period_b.split("-")[0];
+                var end_b = period_b.split("-")[1];
+                $("#beginDate_a").val(begin_a);
+                $("#endDate_a").val(end_a);
+                $("#beginDate_b").val(begin_b);
+                $("#endDate_b").val(end_b);
+            }
+            else {
+                if (period.indexOf("-") >= 0) {
+                    var begin = period.split("-")[0];
+                    var end = period.split("-")[1];
+                    $("#beginDate_a").val(begin);
+                    $("#endDate_a").val(end);
+                }
+                else {
+                    //休息
+                    $("#rest").attr("checked", true);
+                }
+            }
+            $(".schedual_change").show();
+            $(".schedual_change .saveBtn").unbind('click').click(function () {
+                var rest = $("#rest").attr("checked");
+                var begin_a = $("#beginDate_a").val();
+                var end_a = $("#endDate_a").val();
+                var begin_b = $("#beginDate_b").val();
+                var end_b = $("#endDate_b").val();
+                var remark = $("#remark").html();
+                $(obj).find(".remark").html(remark);
+                if (rest == true) {
+                    $(obj).find(".period").html("休");
+                }
+                else {
+                    if (begin_a == "" || (begin_a != "" && end_a == "")) {
+                        alert("请输入完整的时间段1！");
+                        return false;
+                    }
+                    if (begin_b != "" && end_b == "") {
+                        alert("请输入完整的时间段2！");
+                        return false;
+                    }
+                    var period = "";
+                    if (begin_b == "") {
+                        period = begin_a + "-" + end_a;
+                    }
+                    else {
+                        period = begin_a + "-" + end_a + "/" + begin_b + "-" + end_b;
+                    }
+                    $(obj).find(".period").html(period);
+                }
+                UnLoading();
+                $(".schedual_change").hide();
+                AutoIframeHeight();
+            });
+        }
+        function CloseChange() {
+            UnLoading();
+            $(".schedual_change").hide();
+        }
+    </script>
+</head>
+<body>
+    <div id="template_list">
+        <fieldset>
+            <legend><span class="field_leg">排班模板查询</span></legend>
+            <div class="select_where">
+                <span>名称搜索：</span>
+                <input type="text" id="queryTemplateName" class="normalInput" />
+                <span class="ml_50"><input class="selectBtn" type="button" value="查询" onclick="getPage(1)" /></span>
+                <span class="ml_50"><input class="selectBtn" type="button" value="新增" onclick="ShowInsertPage('add')" /></span>
+            </div>
+            <div id="guest_tb">
+            </div>
+        </fieldset>
+    </div>
+    <div id="template_add" style="display:none">
+        <fieldset>
+            <legend><span class="field_leg">添加排班模板</span></legend>
+            <div class="schedual_change">
+                <div class="title_float">修改班次<span class="close_float" onclick="CloseChange()">×</span></div>
+                <table cellspacing="7">
+                    <tr>
+                        <td>时间段1：</td>
+                        <td>
+                            <input type="text" id="beginDate_a" class="Wdate" readonly="readonly" onclick="WdatePicker({ dateFmt: 'HH:mm' })" /><span class="ml_20 mr_20">至</span><input type="text" id="endDate_a" class="Wdate" readonly="readonly" onclick="WdatePicker({ dateFmt: 'HH:mm' })" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>时间段2：</td>
+                        <td>
+                            <input type="text" id="beginDate_b" class="Wdate" readonly="readonly" onclick="WdatePicker({ dateFmt: 'HH:mm' })" /><span class="ml_20 mr_20">至</span><input type="text" id="endDate_b" class="Wdate" readonly="readonly" onclick="WdatePicker({ dateFmt: 'HH:mm' })" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>备注：</td>
+                        <td>
+                            <textarea id="remark" cols="30" rows="3"></textarea>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>是否休息：</td>
+                        <td><input class="cb" onclick="ClickRest()" type="checkbox" id="rest" name="rest" /><span>休</span></td>
+                    </tr>
+                </table>
+                <div class="footLineBtn_float">
+                    <span>tips：非两头班时间段2无需填写！</span><input type="button" value="保存" class="saveBtn ml_20" />
+                </div>
+            </div>
+            <div>
+                <table class="insert_tb" cellpadding="5" cellspacing="5">
+                    <tr>
+                        <td style="text-align:right"><div style="width:120px">模板名称：</div></td>
+                        <td>
+                            <input type="text" id="templateName" class="normalInput" />
+                            <input type="hidden" id="ID" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="text-align:right">房间：</td>
+                        <td>
+                            <ul id="ul_Room_two" class="ul_hor"></ul>
+                            <div style="clear:both"></div>
+                            <ul id="ul_Room_four" class="ul_hor"></ul>
+                            <div style="clear:both"></div>
+                            <ul id="ul_Room_five" class="ul_hor"></ul>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="text-align:right">排班明细：</td>
+                        <td>
+                            <div id="schedualTemp" style="width:880px;overflow-x:auto;"></div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="text-align:right">状态：</td>
+                        <td>
+                            <select id="status" class="normalSelect">
+                                <option value="1">可用</option>
+                                <option value="0">停用</option>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="text-align:right">模板说明：</td>
+                        <td>
+                            <textarea id="templateRemark" cols="40" rows="5"></textarea>
+                        </td>
+                    </tr>
+                </table>
+                <div class="footLineBtn">
+                    <input type="button" value="返回" class="saveBtn" onclick="ChangeShowPage('template_list','template_add')" />
+                    <input type="button" value="保存" class="saveBtn ml_20" onclick="SaveSchedualTemplate()" />
+                </div>
+            </div>
+        </fieldset>
+    </div>
+</body>
+</html>

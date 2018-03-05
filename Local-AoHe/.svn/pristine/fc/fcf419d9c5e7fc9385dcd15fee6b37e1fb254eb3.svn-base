@@ -1,0 +1,202 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>员工考评记录录入</title>
+    <meta charset="utf-8" />
+    <script src="../Script/global.js"></script>
+    <link href="../Css/style.css" rel="stylesheet" />
+    <script src="../Script/jquery-1.4.2.min.js"></script>
+    <script src="../times/WdatePicker.js"></script>
+    <script type="text/javascript">
+        $(function () {
+            var nowDate = new Date().ToString("yyyy-MM-dd");
+            $("#createOn").val(nowDate);
+            //设置iframe高度
+            var iframeHeight = $("#iframInfo", window.parent.document).contents().find("body").height();
+            $("#iframInfo", window.parent.document).height(iframeHeight);
+        })
+        function FindStaff() {
+            var input = $("#chooseStaff").val();
+            if (input == "") {
+                alert("请输入员工姓名！");
+                return false;
+            }
+            $("#chooseStaffList").empty();
+            var querydata = "&chooseStaff=" + input;
+            $.ajax(
+            {
+                type: "GET",
+                url: "../MainHandler.ashx?action=FindStaff",
+                dataType: 'json',
+                data: encodeURI(querydata),
+                success: function (result) {
+                    if (result != null && result != "" && result.length > 0) {
+                        if (result.length == 1) {
+                            var name = result[0].Name;
+                            var sex = result[0].Sex == "0" ? '男' : '女';
+                            var postName = result[0].PostName;
+                            var staffNo = result[0].StaffNo;
+                            var IDCardNo = result[0].IDCardNo;
+                            var staffOtherNo = result[0].StaffOtherNo;
+                            $("#name").val(name);
+                            $("#sex").val(sex);
+                            $("#postName").val(postName);
+                            $("#IDCardNo").val(IDCardNo);
+                            $("#staffNo").val(staffNo);
+                            $("#staffOtherNo").val(staffOtherNo);
+                        }
+                        else {
+                            for (var i = 0; i < result.length; i++) {
+                                var name = result[i].Name;
+                                var sex = result[i].Sex == "0" ? '男' : '女';
+                                var postName = result[i].PostName;
+                                var staffNo = result[i].StaffNo;
+                                var IDCardNo = result[i].IDCardNo;
+                                var staffOtherNo = result[i].StaffOtherNo;
+                                var li = $("<li staffOtherNo='" + staffOtherNo + "' name='" + name + "' IDCardNo='" + IDCardNo + "' sex='" + sex + "' postName='" + postName + "' staffNo='" + staffNo + "' onclick='FillStaffInfo(this)'>" + staffNo + name + "</li>");
+                                $("#chooseStaffList").append(li);
+                            }
+                        }
+                    }
+                    else {
+                        alert("未查询到数据！");
+                        return false;
+                    }
+                }
+            });
+        }
+        function FillStaffInfo(obj) {
+            var name = $(obj).attr("name");
+            var sex = $(obj).attr("sex");
+            var IDCardNo = $(obj).attr("IDCardNo");
+            var postName = $(obj).attr("postName");
+            var staffNo = $(obj).attr("staffNo");
+            var staffOtherNo = $(obj).attr("staffOtherNo");
+            $("#staffNo").val(staffNo);
+            $("#staffOtherNo").val(staffOtherNo);
+            $("#name").val(name);
+            $("#sex").val(sex);
+            $("#postName").val(postName);
+            $("#IDCardNo").val(IDCardNo);
+            $("#chooseStaffList").empty();
+        }
+        function AddStaffEvaluate() {
+            var staffNo = $("#staffNo").val();
+            var createOn = $("#createOn").val();
+            var evaluateType = $("#evaluateType").val();
+            var remark = $("#remark").html();
+            //验证非空
+            if (staffNo == "") {
+                alert("请选择员工！");
+                return false;
+            }
+            if (createOn == "") {
+                alert("请输入记录日期！");
+                return false;
+            }
+            if (evaluateType == "") {
+                alert("请选择评估类型！");
+                return false;
+            }
+            if (remark != "") {
+                if (remark.indexOf("~") > -1 || remark.indexOf("*") > -1 ||
+                remark.indexOf("^") > -1 || remark.indexOf("$") > -1) {
+                    alert("记录详情中不能包含\"~\"、\"*\"、\"^\"、\"$\"等特殊字符!");
+                    return false;
+                }
+            }
+            var querydata = "&staffNo=" + staffNo + "&evaluateType=" + evaluateType + "&createOn=" + createOn + "&remark=" + remark;
+            $.ajax(
+            {
+                type: "GET",
+                url: "../MainHandler.ashx?action=AddStaffEvaluate",
+                dataType: 'text',
+                data: encodeURI(querydata),
+                success: function (result) {
+                    if (result != null && result != "") {
+                        if (parseInt(result) > 0) {
+                            alert("考评记录添加成功！");
+                            window.parent.ChangeIframe('StaffEvaluate');
+                        }
+                        else {
+                            alert("考评记录添加异常，请重新填写！");
+                        }
+                    }
+                }
+            });
+        }
+        function ResetInput() {
+            $("#insert .normalInput").val('');
+            $("#insert #remark").html('');
+            $("#insert #chooseStaffList").empty();
+        }
+    </script>
+</head>
+<body>
+    <div id="insert">
+        <fieldset>
+            <legend><span class="field_leg">员工考评记录录入</span></legend>
+            <div>
+                <table class="insert_tb" cellpadding="5" cellspacing="5">
+                    <tr>
+                        <td class="font_weight">员工选择：</td>
+                        <td>
+                            <input type="text" id="chooseStaff" class="normalInput" />
+                            <ul class="choose_list" id="chooseStaffList"></ul>
+                        </td>
+                        <td>
+                            <input type="button" value="确认" class="confirmBtn" onclick="FindStaff()" />
+                        </td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>员工编号：</td>
+                        <td>
+                            <input type="text" id="staffOtherNo" class="normalInput" disabled="disabled" />
+                            <input type="hidden" id="staffNo" />
+                        </td>
+                        <td>姓名：</td>
+                        <td><input type="text" id="name" class="normalInput" disabled="disabled" /></td>
+                        <td>性别：</td>
+                        <td><input type="text" id="sex" class="normalInput" disabled="disabled" /></td>
+                    </tr>
+                    <tr>
+                        <td>身份证号：</td>
+                        <td><input type="text" id="IDCardNo" class="normalInput" disabled="disabled" /></td>
+                        <td>职级：</td>
+                        <td><input type="text" id="postName" class="normalInput" disabled="disabled" /></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>评估类型：</td>
+                        <td>
+                            <select id="evaluateType" class="normalSelect">
+                                <option value="0">好评</option>
+                                <option value="1">劣评</option>
+                            </select>
+                        </td>
+                        <td>记录日期：</td>
+                        <td>
+                            <input type="text" id="createOn" class="Wdate" readonly="readonly" onclick="WdatePicker({ dateFmt: 'yyyy-MM-dd' })" />
+                        </td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>记录详情：</td>
+                        <td colspan="3"><textarea id="remark" cols="40" rows="5"></textarea></td>
+                    </tr>
+                </table>
+                <div class="footLineBtn">
+                    <input type="button" value="重置" class="saveBtn" onclick="ResetInput()" />
+                    <input type="button" value="保存" class="saveBtn" onclick="AddStaffEvaluate()" />
+                </div>
+            </div>
+        </fieldset>
+    </div>
+</body>
+</html>

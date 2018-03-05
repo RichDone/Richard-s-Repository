@@ -1,0 +1,486 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>员工绩效考核</title>
+    <meta charset="utf-8" />
+    <script src="../Script/global.js"></script>
+    <link href="../Css/style.css" rel="stylesheet" />
+    <script src="../Script/jquery-1.4.2.min.js"></script>
+    <script src="../times/WdatePicker.js"></script>
+    <script type="text/javascript">
+        $(function () {
+            InitAssessType();
+            getPage(1);
+            //设置iframe高度
+            AutoIframeHeight();
+        })
+        var sortfield = "";
+        var sorttype = "";
+        var saveflag = "";
+        function setsort(_sortfield) {
+            if (sortfield != _sortfield) {
+                sorttype = "asc";
+                sortfield = _sortfield;
+            }
+            else {
+                if (sorttype == "asc") {
+                    sorttype = "desc";
+                }
+                else {
+                    sorttype = "asc";
+                }
+            }
+            var currentpage = $("#hid_currentpage").val();
+            getPage(currentpage);
+        }
+        //跳转页面
+        function pagespress() {
+            var k = window.event.keyCode;
+            if ((k == 46) || (k == 8) || (k >= 48 && k <= 57) || (k >= 96 && k <= 105) || (k >= 37 && k <= 40)) {
+            }
+            else if (k == 13) {
+                var topage = $("#txt_topages").val();
+                if (topage != '0') {
+                    if (parseInt(topage, 10) > parseInt($("#hid_totalpage").val(), 10)) {
+                        topage = $("#hid_totalpage").val();
+                        $("#txt_topages").val(topage);
+                    }
+                    getPage(topage);
+                }
+            }
+            else {
+                window.event.returnValue = false;
+            }
+        }
+        //点击GO按钮进行翻页动作
+        function pagespressForGo() {
+            var topage = $("#txt_topages").val();
+            if (topage != '0') {
+                if (parseInt(topage, 10) > parseInt($("#hid_totalpage").val(), 10)) {
+                    topage = $("#hid_totalpage").val();
+                    $("#txt_topages").val(topage);
+                }
+                getPage(topage);
+            }
+        }
+        function getPage(currentpage) {
+            ChangeShowPage('staffAssess_list', 'staffAssess_add');
+            var pagesize = "10";
+            var name = $("#queryName").val();
+            var assessDate = $("#queryAssessDate").val();
+            if ($("#sel_pagesize").val() != "" && typeof ($("#sel_pagesize").val()) != "undefined") { pagesize = $("#sel_pagesize").val(); }
+            var querydata = "&assessDate=" + assessDate + "&name=" + name + "&currentpage=" + currentpage + "&pagesize=" + pagesize + "&sortfield=" + sortfield + "&sorttype=" + sorttype;
+            $.ajax(
+            {
+                type: "GET",
+                url: "../MainHandler.ashx?action=getRecordPage_StaffAssess",
+                dataType: 'text',
+                data: encodeURI(querydata),
+                success: function (result) {
+                    $("#staffAssess_tb").html(result);
+                    //设置iframe高度
+                    AutoIframeHeight();
+                }
+            });
+        }
+        function Save() {
+            var ID = $("#ID").val();
+            var staffNo = $("#staffNo").val();
+            var assessDate = $("#assessDate").val();
+            var status = $("#status").val();
+            var remark = $("#remark").html();
+            var assessType = $("#assessType").val();
+            var assessTemplateID = $("#assessTemplateID").val();
+            //验证非空
+            if (staffNo == "") {
+                alert("请选择员工！");
+                return false;
+            }
+            if (assessDate == "") {
+                alert("请输入考核时间！");
+                return false;
+            }
+            if (status == "") {
+                alert("请选择状态！");
+                return false;
+            }
+            if (remark != "") {
+                if (remark.indexOf("~") > -1 || remark.indexOf("*") > -1 ||
+                remark.indexOf("^") > -1 || remark.indexOf("$") > -1) {
+                    alert("备注中不能包含\"~\"、\"*\"、\"^\"、\"$\"等特殊字符!");
+                    return false;
+                }
+            }
+            if (assessType == "") {
+                alert("请选择考核类型！");
+                return false;
+            }
+            var score = "";
+            var flag = true;
+            $("#assessDetail .tr_detail").each(function () {
+                var fullScore = $(this).find(".score").html();
+                var getScore = $(this).find(".getScore").val();
+                if (getScore == "") {
+                    alert("请输入得分！");
+                    flag = false;
+                    return false;
+                }
+                if (isNaN(getScore)) {
+                    alert("请输入正确的得分！");
+                    flag = false;
+                    return false;
+                }
+                if (parseFloat(getScore) > parseFloat(fullScore)) {
+                    alert("得分不得大于标准分！");
+                    flag = false;
+                    return false;
+                }
+                score = score + (getScore + ",");
+            });
+            if (flag == false) {
+                return false;
+            }
+            if (score == "") {
+                alert("无考核模板明细，无法添加绩效考核！");
+                return false;
+            }
+            var querydata = "&remark=" + remark + "&ID=" + ID + "&status=" + status + "&score=" + score
+                + "&staffNo=" + staffNo + "&assessTemplateID=" + assessTemplateID
+                + "&assessDate=" + assessDate + "&saveflag=" + saveflag;
+            $.ajax(
+            {
+                type: "GET",
+                url: "../MainHandler.ashx?action=SaveStaffAssess",
+                dataType: 'text',
+                data: encodeURI(querydata),
+                success: function (result) {
+                    if (result != null && result != "") {
+                        if (parseInt(result) > 0) {
+                            alert("保存员工绩效考核成功！");
+                            getPage(1);
+                        }
+                        else {
+                            alert("保存员工绩效考核失败，请重新操作！");
+                        }
+                    }
+                }
+            });
+        }
+        function GetStaffAssessInfo(ID) {
+            var querydata = "&ID=" + ID;
+            $.ajax(
+            {
+                type: "GET",
+                url: "../MainHandler.ashx?action=GetStaffAssessByID",
+                dataType: 'json',
+                data: encodeURI(querydata),
+                success: function (result) {
+                    if (result != null && result != "") {
+                        $("#ID").val(result.ID);
+                        $("#assessTemplateID").val(result.AssessTemplateID);
+                        $("#staffNo").val(result.StaffNo);
+                        var assessDate = new Date(parseInt(result.AssessDate.substr(6))).ToString("yyyy-MM");
+                        $("#assessDate").val(assessDate);
+                        $("#status").val(result.Status);
+                        $("#remark").html(result.Remark);
+                        $("#assessType").val(result.AssessType);
+                        $("#name").val(result.Name);
+                        $("#rank").val(result.Rank);
+                        $("#chooseStaff").val(result.Name);
+                        //模板明细
+                        $("#assessDetail tr:gt(0)").remove();
+                        var fullScore = 0;
+                        $.each(result.ListAssessTemplateDetail, function (index, item) {
+                            fullScore += parseInt(item.Score, 10);
+                            AppendTrDetail(item);
+                        });
+                        $("#fullScore1").val(fullScore);
+                        //分数填入
+                        var score = result.Score;
+                        for (var i = 0; i < score.split(',').length; i++) {
+                            var getScore = score.split(',')[i];
+                            $("#assessDetail .tr_detail").eq(i).find(".getScore").eq(0).val(getScore);
+                        }
+                        SumFullScore();
+                    }
+                    else {
+                        alert("未查询到数据！");
+                        return false;
+                    }
+                }
+            });
+        }
+        function ChangeShowPage(showID, hideID) {
+            $("#" + showID).show();
+            $("#" + hideID).hide();
+            //设置iframe高度
+            AutoIframeHeight();
+        }
+        function ShowInsertPage(flag, ID) {
+            saveflag = flag;
+            if (saveflag == "add") {
+                $("#staffAssess_add .normalInput").val('');
+                $("#staffAssess_add .normalSelect").val('');
+                $("#assessTemplateID").val("");
+                $("#ID").val("");
+                $("#remark").html('');
+                $("#assessDate").val('');
+                $("#staffAssess_add .notallow_edit").attr("disabled", false);
+            }
+            if (saveflag == "edit") {
+                GetStaffAssessInfo(ID);
+                $("#staffAssess_add .notallow_edit ").attr("disabled", true);
+            }
+            ChangeShowPage('staffAssess_add', 'staffAssess_list')
+        }
+        function DeleteStaffAssess(ID) {
+            if (confirm("确认删除员工绩效考核吗？")) {
+                var querydata = "&ID=" + ID;
+                $.ajax(
+                {
+                    type: "GET",
+                    url: "../MainHandler.ashx?action=DeleteStaffAssess",
+                    dataType: 'text',
+                    data: encodeURI(querydata),
+                    success: function (result) {
+                        if (result != null && result != "") {
+                            if (parseInt(result) > 0) {
+                                alert("删除员工绩效考核成功！");
+                                getPage(1);
+                            }
+                            else {
+                                alert("删除员工绩效考核异常，请重新操作！");
+                            }
+                        }
+                    }
+                });
+            }
+        }
+        function FindStaff() {
+            var input = $("#chooseStaff").val();
+            if (input == "") {
+                alert("请输入员工姓名！");
+                return false;
+            }
+            $("#chooseStaffList").empty();
+            var querydata = "&chooseStaff=" + input;
+            $.ajax(
+            {
+                type: "GET",
+                url: "../MainHandler.ashx?action=FindStaff",
+                dataType: 'json',
+                data: encodeURI(querydata),
+                success: function (result) {
+                    if (result != null && result != "" && result.length > 0) {
+                        if (result.length == 1) {
+                            var name = result[0].Name;
+                            var rank = result[0].Rank;
+                            var staffNo = result[0].StaffNo;
+                            $("#name").val(name);
+                            $("#rank").val(rank);
+                            $("#staffNo").val(staffNo);
+                        }
+                        else {
+                            for (var i = 0; i < result.length; i++) {
+                                var name = result[i].Name;
+                                var rank = result[i].Rank;
+                                var staffNo = result[i].StaffNo;
+                                var li = $("<li name='" + name + "' rank='" + rank + "' staffNo='" + staffNo + "' onclick='FillStaffInfo(this)'>" + staffNo + name + "</li>");
+                                $("#chooseStaffList").append(li);
+                            }
+                        }
+                    }
+                    else {
+                        alert("未查询到数据！");
+                        return false;
+                    }
+                }
+            });
+        }
+        function FillStaffInfo(obj) {
+            var name = $(obj).attr("name");
+            var rank = $(obj).attr("rank");
+            var staffNo = $(obj).attr("staffNo");
+            $("#staffNo").val(staffNo);
+            $("#name").val(name);
+            $("#rank").val(rank);
+            $("#chooseStaffList").empty();
+        }
+        function FillAssessTemplate() {
+            var rank = $("#rank").val();
+            if (rank == "") {
+                alert("请选确认员工！");
+                return false;
+            }
+            var assessType = $("#assessType").val();
+            var querydata = "&rank=" + rank + "&assessType=" + assessType;
+            $.ajax(
+            {
+                type: "GET",
+                url: "../MainHandler.ashx?action=GetAssessTemplateByWhere",
+                dataType: 'json',
+                data: encodeURI(querydata),
+                success: function (result) {
+                    if (result != null && result != "" && result.ID != 0) {
+                        $("#assessTemplateID").val(result.ID);
+                        $("#assessDetail tr:gt(0)").remove();
+                        var fullScore = 0;
+                        $.each(result.ListAssessTemplateDetail, function (index, item) {
+                            fullScore += parseInt(item.Score, 10);
+                            AppendTrDetail(item);
+                        });
+                        $("#fullScore1").val(fullScore);
+                    }
+                    else {
+                        $("#assessDetail tr:gt(0)").remove();
+                        alert("无任何符合条件的考核模板！");
+                        return false;
+                    }
+                }
+            });
+        }
+        function AppendTrDetail(obj) {
+            var html = $("<tr class='tr_detail'><td><span class='assessProjectType'></span></td>"
+            + "<td><span class='assessProjectNo'></td>"
+            + "<td><span class='assessProjectName'></td>"
+            + "<td><span class='remark'></td>"
+            + "<td><span class='score'></td>"
+            + "<td><input class='getScore editInput' type='text' onkeyup='SumFullScore()' /></td></tr>");
+            if (obj) {
+                html.find(".assessProjectType").html(obj.AssessProjectType);
+                html.find(".assessProjectNo").html(obj.AssessProjectNo);
+                html.find(".assessProjectName").html(obj.AssessProjectName);
+                html.find(".remark").html(obj.Remark);
+                html.find(".score").html(obj.Score);
+            }
+            $("#assessDetail").append(html);
+            AutoIframeHeight();
+        }
+        function SumFullScore() {
+            var fullScore = 0;
+            $("#assessDetail .tr_detail").each(function () {
+                var score = $(this).find(".getScore").val();
+                if (score == "") {
+                    score = 0;
+                }
+                if (isNaN(score)) {
+                    score = 0;
+                }
+                fullScore += parseInt(score, 10);
+            });
+            $("#fullScore2").val(fullScore);
+        }
+        function AutoIframeHeight() {
+            //设置iframe高度
+            var iframeHeight = $("#iframInfo", window.parent.document).contents().find("body").height();
+            $("#iframInfo", window.parent.document).height(iframeHeight);
+        }
+        function InitAssessType() {
+            $("#assessType").empty();
+            $.ajax(
+           {
+               type: "GET",
+               url: "../MainHandler.ashx?action=InitSelect_AssessType",
+               dataType: 'text',
+               success: function (result) {
+                   if (result != null && result != "" && result.length > 0) {
+                       $("#assessType").append(result);
+                   }
+               }
+           });
+        }
+    </script>
+</head>
+<body>
+    <div id="staffAssess_list">
+        <fieldset>
+            <legend><span class="field_leg">员工绩效考核</span></legend>
+            <div class="select_where">
+                <span>员工姓名：</span>
+                <input type="text" id="queryName" class="normalInput" />
+                <span class="ml_50">考核年月：</span>
+                <input type="text" id="queryAssessDate" class="Wdate" readonly="readonly" onclick="WdatePicker({ dateFmt: 'yyyy-MM' })" />
+                <span class="ml_50"><input class="selectBtn" type="button" value="查询" onclick="getPage(1)" /></span>
+                <span class="ml_50"><input class="selectBtn" type="button" value="新增" onclick="ShowInsertPage('add')" /></span>
+            </div>
+            <div id="staffAssess_tb">
+            </div>
+        </fieldset>
+    </div>
+    <div id="staffAssess_add" style="display:none">
+        <fieldset>
+            <legend><span class="field_leg">员工绩效考核录入</span></legend>
+            <div>
+                <table class="insert_tb" cellpadding="5" cellspacing="5">
+                    <tr>
+                        <td class="font_weight">员工选择：</td>
+                        <td>
+                            <input type="text" id="chooseStaff" class="normalInput notallow_edit" />
+                            <ul class="choose_list" id="chooseStaffList"></ul>
+                        </td>
+                        <td>
+                            <input type="button" value="确认" class="confirmBtn notallow_edit" onclick="FindStaff()" />
+                        </td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>员工编号：</td>
+                        <td><input type="text" id="staffNo" class="normalInput" disabled="disabled" /></td>
+                        <td>姓名：</td>
+                        <td><input type="text" id="name" class="normalInput" disabled="disabled" /></td>
+                        <td>职级：</td>
+                        <td><input type="text" id="rank" class="normalInput" disabled="disabled" /></td>
+                    </tr>
+                    <tr>
+                        <td>考核类型：</td>
+                        <td>
+                            <select id="assessType" class="normalSelect notallow_edit" onchange="FillAssessTemplate()"></select>
+                            <input type="hidden" id="ID" />
+                            <input type="hidden" id="assessTemplateID" />
+                        </td>
+                        <td>考核年月：</td>
+                        <td>
+                            <input type="text" id="assessDate" class="Wdate" readonly="readonly" onclick="WdatePicker({ dateFmt: 'yyyy-MM' })" />
+                        </td>
+                        <td>状态：</td>
+                        <td>
+                            <select id="status" class="normalSelect">
+                                <option value="">请选择</option>
+                                <option value="0">考核中</option>
+                                <option value="1">确认</option>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>满分：</td>
+                        <td><input type="text" id="fullScore1" disabled="disabled" class="normalInput"/></td>
+                        <td>得分：</td>
+                        <td><input type="text" id="fullScore2" disabled="disabled" class="normalInput" /></td>
+                    </tr>
+                    <tr>
+                        <td>备注：</td>
+                        <td colspan="3"><textarea id="remark" cols="40" rows="5"></textarea></td>
+                    </tr>
+                </table>
+                <table id="assessDetail" class="insert_tb list_tb_edit mt_20" cellpadding="0" cellspacing="0">
+                    <tr>
+                        <th style="width:20%">考核项目分类</th>
+                        <th style="width:10%">考核项目编号</th>
+                        <th style="width:25%">考核项目名称</th>
+                        <th style="width:25%">考核项目说明</th>
+                        <th style="width:10%">分数</th>
+                        <th style="width:10%">得分</th>
+                    </tr>
+                </table>
+                <div class="footLineBtn">
+                    <input type="button" value="返回" class="saveBtn" onclick="ChangeShowPage('staffAssess_list','staffAssess_add')" />
+                    <input type="button" value="保存" class="saveBtn ml_20" onclick="Save()" />
+                </div>
+            </div>
+        </fieldset>
+    </div>
+</body>
+</html>

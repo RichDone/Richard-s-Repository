@@ -1,0 +1,235 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<!--
+您 Web 项目的发布/打包进程将使用此文件。您可以通过编辑此 MSBuild 文件
+来自定义该进程的行为。若要了解与此相关的详细信息，请访问 http://go.microsoft.com/fwlink/?LinkID=208121。
+-->
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <TimeStampOfAssociatedLegacyPublishXmlFile />
+    <_PublishTargetUrl>G:\AoHeManage</_PublishTargetUrl>
+  </PropertyGroup>
+  <ItemGroup>
+    <File Include="ApplicationInsights.config">
+      <publishTime>09/15/2017 11:40:20</publishTime>
+    </File>
+    <File Include="bin/AoHeManage.dll">
+      <publishTime>01/10/2018 19:17:28</publishTime>
+    </File>
+    <File Include="bin/AoHeManage.pdb">
+      <publishTime>01/10/2018 19:17:28</publishTime>
+    </File>
+    <File Include="bin/ApplicationInsights.config">
+      <publishTime>09/15/2017 11:40:20</publishTime>
+    </File>
+    <File Include="bin/Maticsoft.DBUtility.dll">
+      <publishTime>08/18/2017 18:53:19</publishTime>
+    </File>
+    <File Include="bin/Microsoft.AI.Agent.Intercept.dll">
+      <publishTime>09/15/2017 11:41:02</publishTime>
+    </File>
+    <File Include="bin/Microsoft.AI.DependencyCollector.dll">
+      <publishTime>09/15/2017 11:41:00</publishTime>
+    </File>
+    <File Include="bin/Microsoft.AI.PerfCounterCollector.dll">
+      <publishTime>09/15/2017 11:40:56</publishTime>
+    </File>
+    <File Include="bin/Microsoft.AI.ServerTelemetryChannel.dll">
+      <publishTime>09/15/2017 11:40:57</publishTime>
+    </File>
+    <File Include="bin/Microsoft.AI.Web.dll">
+      <publishTime>09/15/2017 11:41:01</publishTime>
+    </File>
+    <File Include="bin/Microsoft.AI.WindowsServer.dll">
+      <publishTime>09/15/2017 11:41:03</publishTime>
+    </File>
+    <File Include="bin/Microsoft.ApplicationInsights.dll">
+      <publishTime>09/15/2017 11:41:02</publishTime>
+    </File>
+    <File Include="bin/Microsoft.CodeDom.Providers.DotNetCompilerPlatform.dll">
+      <publishTime>09/15/2017 11:40:58</publishTime>
+    </File>
+    <File Include="bin/MySql.Data.dll">
+      <publishTime>08/18/2017 17:33:49</publishTime>
+    </File>
+    <File Include="bin/roslyn/csc.exe">
+      <publishTime>09/15/2017 11:40:59</publishTime>
+    </File>
+    <File Include="bin/roslyn/Microsoft.Build.Tasks.CodeAnalysis.dll">
+      <publishTime>09/15/2017 11:40:59</publishTime>
+    </File>
+    <File Include="bin/roslyn/Microsoft.CodeAnalysis.CSharp.dll">
+      <publishTime>09/15/2017 11:40:59</publishTime>
+    </File>
+    <File Include="bin/roslyn/Microsoft.CodeAnalysis.dll">
+      <publishTime>09/15/2017 11:40:59</publishTime>
+    </File>
+    <File Include="bin/roslyn/Microsoft.CodeAnalysis.VisualBasic.dll">
+      <publishTime>09/15/2017 11:40:59</publishTime>
+    </File>
+    <File Include="bin/roslyn/Microsoft.CSharp.Core.targets">
+      <publishTime>09/15/2017 11:40:59</publishTime>
+    </File>
+    <File Include="bin/roslyn/Microsoft.VisualBasic.Core.targets">
+      <publishTime>09/15/2017 11:40:59</publishTime>
+    </File>
+    <File Include="bin/roslyn/System.Collections.Immutable.dll">
+      <publishTime>09/15/2017 11:40:59</publishTime>
+    </File>
+    <File Include="bin/roslyn/System.Reflection.Metadata.dll">
+      <publishTime>09/15/2017 11:40:59</publishTime>
+    </File>
+    <File Include="bin/roslyn/vbc.exe">
+      <publishTime>09/15/2017 11:40:59</publishTime>
+    </File>
+    <File Include="bin/roslyn/VBCSCompiler.exe">
+      <publishTime>09/15/2017 11:40:59</publishTime>
+    </File>
+    <File Include="bin/roslyn/VBCSCompiler.exe.config">
+      <publishTime>09/15/2017 11:40:59</publishTime>
+    </File>
+    <File Include="Css/style.css">
+      <publishTime>01/09/2018 18:44:31</publishTime>
+    </File>
+    <File Include="Image/arrows-ffffff.png">
+      <publishTime>09/15/2017 11:40:21</publishTime>
+    </File>
+    <File Include="Index.html">
+      <publishTime>01/10/2018 17:38:42</publishTime>
+    </File>
+    <File Include="Main.html">
+      <publishTime>08/31/2017 16:22:34</publishTime>
+    </File>
+    <File Include="MainHandler.ashx">
+      <publishTime>09/15/2017 11:40:21</publishTime>
+    </File>
+    <File Include="packages.config">
+      <publishTime>09/15/2017 11:40:21</publishTime>
+    </File>
+    <File Include="PrecompiledApp.config">
+      <publishTime>01/10/2018 19:18:14</publishTime>
+    </File>
+    <File Include="Script/global.js">
+      <publishTime>01/04/2018 15:45:41</publishTime>
+    </File>
+    <File Include="Script/jquery-1.4.2.min.js">
+      <publishTime>09/15/2017 11:40:23</publishTime>
+    </File>
+    <File Include="Script/jquerydocwrite.easyui.min.js">
+      <publishTime>09/15/2017 11:40:23</publishTime>
+    </File>
+    <File Include="SubPage/Accident.html">
+      <publishTime>01/05/2018 17:43:35</publishTime>
+    </File>
+    <File Include="SubPage/AccidentFollwo.html">
+      <publishTime>09/15/2017 11:40:22</publishTime>
+    </File>
+    <File Include="SubPage/AccidentStats.html">
+      <publishTime>09/15/2017 11:40:21</publishTime>
+    </File>
+    <File Include="SubPage/AddAccident.html">
+      <publishTime>01/05/2018 17:45:11</publishTime>
+    </File>
+    <File Include="SubPage/AddDailyRecord.html">
+      <publishTime>01/05/2018 17:50:10</publishTime>
+    </File>
+    <File Include="SubPage/AddSchedual.html">
+      <publishTime>01/04/2018 16:46:43</publishTime>
+    </File>
+    <File Include="SubPage/AddStaffEvaluate.html">
+      <publishTime>09/15/2017 11:40:22</publishTime>
+    </File>
+    <File Include="SubPage/AssessTemplate.html">
+      <publishTime>01/05/2018 17:53:11</publishTime>
+    </File>
+    <File Include="SubPage/BasicInfoManage.html">
+      <publishTime>01/05/2018 16:32:55</publishTime>
+    </File>
+    <File Include="SubPage/DailyRecord.html">
+      <publishTime>12/04/2017 17:06:20</publishTime>
+    </File>
+    <File Include="SubPage/DailyRecordStats.html">
+      <publishTime>01/05/2018 17:50:42</publishTime>
+    </File>
+    <File Include="SubPage/Guest.html">
+      <publishTime>12/04/2017 10:37:50</publishTime>
+    </File>
+    <File Include="SubPage/Manage_AccidentType.html">
+      <publishTime>09/15/2017 11:40:22</publishTime>
+    </File>
+    <File Include="SubPage/Manage_DailyRecordType.html">
+      <publishTime>11/20/2017 15:10:13</publishTime>
+    </File>
+    <File Include="SubPage/OtherWorkTime.html">
+      <publishTime>01/05/2018 16:34:24</publishTime>
+    </File>
+    <File Include="SubPage/PostInfoManage.html">
+      <publishTime>01/08/2018 18:06:45</publishTime>
+    </File>
+    <File Include="SubPage/RoomCombine.html">
+      <publishTime>12/25/2017 09:55:06</publishTime>
+    </File>
+    <File Include="SubPage/Schedual.html">
+      <publishTime>01/04/2018 16:43:30</publishTime>
+    </File>
+    <File Include="SubPage/SchedualCount.html">
+      <publishTime>11/27/2017 16:43:18</publishTime>
+    </File>
+    <File Include="SubPage/SchedualTemplate.html">
+      <publishTime>12/04/2017 14:57:32</publishTime>
+    </File>
+    <File Include="SubPage/SchedualTime.html">
+      <publishTime>11/20/2017 15:48:54</publishTime>
+    </File>
+    <File Include="SubPage/StaffAssess.html">
+      <publishTime>01/09/2018 17:57:34</publishTime>
+    </File>
+    <File Include="SubPage/StaffEvaluate.html">
+      <publishTime>09/15/2017 11:40:22</publishTime>
+    </File>
+    <File Include="SubPage/StaffInfo.html">
+      <publishTime>09/15/2017 11:40:22</publishTime>
+    </File>
+    <File Include="SubPage/StaffManage.html">
+      <publishTime>01/10/2018 18:56:34</publishTime>
+    </File>
+    <File Include="times/calendar.js">
+      <publishTime>09/15/2017 11:40:20</publishTime>
+    </File>
+    <File Include="times/lang/en.js">
+      <publishTime>09/15/2017 11:40:20</publishTime>
+    </File>
+    <File Include="times/lang/zh-cn.js">
+      <publishTime>09/15/2017 11:40:20</publishTime>
+    </File>
+    <File Include="times/lang/zh-tw.js">
+      <publishTime>09/15/2017 11:40:20</publishTime>
+    </File>
+    <File Include="times/skin/datePicker.gif">
+      <publishTime>09/15/2017 11:40:20</publishTime>
+    </File>
+    <File Include="times/skin/default/datepicker.css">
+      <publishTime>09/15/2017 11:40:20</publishTime>
+    </File>
+    <File Include="times/skin/default/img.gif">
+      <publishTime>09/15/2017 11:40:20</publishTime>
+    </File>
+    <File Include="times/skin/WdatePicker.css">
+      <publishTime>09/15/2017 11:40:21</publishTime>
+    </File>
+    <File Include="times/skin/whyGreen/bg.jpg">
+      <publishTime>09/15/2017 11:40:21</publishTime>
+    </File>
+    <File Include="times/skin/whyGreen/datepicker.css">
+      <publishTime>09/15/2017 11:40:21</publishTime>
+    </File>
+    <File Include="times/skin/whyGreen/img.gif">
+      <publishTime>09/15/2017 11:40:21</publishTime>
+    </File>
+    <File Include="times/WdatePicker.js">
+      <publishTime>11/16/2017 18:16:47</publishTime>
+    </File>
+    <File Include="Web.config">
+      <publishTime>01/10/2018 19:18:13</publishTime>
+    </File>
+  </ItemGroup>
+</Project>

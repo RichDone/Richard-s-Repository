@@ -1,0 +1,228 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>合理性检测</title>
+    <meta charset="utf-8" />
+    <script src="../Script/global.js"></script>
+    <link href="../Css/style.css" rel="stylesheet" />
+    <script src="../Script/jquery-1.4.2.min.js"></script>
+    <script src="../times/WdatePicker.js"></script>
+    <script src="../Script/excellentexport.js"></script>
+    <script type="text/javascript">
+        $(function () {
+            GetReasonableParam();
+            var getMonth = new Date().ToString("yyyy-MM");
+            $("#begin_ChooseMonth").val(getMonth + "-01");
+            $("#end_ChooseMonth").val(new Date(getMonth + "-01").AddMonths(1).AddDays(-1).ToString("yyyy-MM-dd"));
+        })
+        function AutoIframeHeight() {
+            //设置iframe高度
+            var iframeHeight = $("#iframInfo", window.parent.document).contents().find("body").height();
+            $("#iframInfo", window.parent.document).height(iframeHeight);
+        }
+        function CheckReasonableSchedualInfo(type, obj) {
+            var begin_ChooseMonth = $("#begin_ChooseMonth").val();
+            var end_ChooseMonth = $("#end_ChooseMonth").val();
+            if (begin_ChooseMonth == "" || end_ChooseMonth == "") {
+                alert("请选择日期！");
+                return false;
+            }
+            var paramType_a = $("#type_a").html();
+            var paramType_b = $("#type_b").html();
+            var paramType_c = $("#type_c").html();
+            var paramType_d = $("#type_d").html();
+            var paramType_e = $("#type_e").html();
+            $("#reasonableTitle").html($(obj).html());
+            $("#printBtn").show();
+            $("#reasonableSchedualInfo").html("");
+            Loading("正在检测，请稍等...");
+            var querydata = "&begin_ChooseMonth=" + begin_ChooseMonth + "&end_ChooseMonth=" + end_ChooseMonth + "&type=" + type
+            + "&paramType_a=" + paramType_a + "&paramType_b=" + paramType_b
+                + "&paramType_c=" + paramType_c + "&paramType_d=" + paramType_d + "&paramType_e=" + paramType_e;
+            $.ajax({
+                type: "GET",
+                url: "../MainHandler.ashx?action=CheckReasonableSchedualInfo",
+                dataType: 'text',
+                data: encodeURI(querydata),
+                success: function (result) {
+                    UnLoading();
+                    if (result != null && result != "" && result.length > 0) {
+                        $("#reasonableSchedualInfo").html(result);
+                        $("#reasonableSchedualInfo").addClass("scroll_x");
+                    }
+                    AutoIframeHeight();
+                }
+            });
+        }
+        function SetReasonableParam() {
+            Loading();
+            $(".setreasonableparam").show();
+        }
+        function CloseChange() {
+            UnLoading();
+            $(".setreasonableparam").hide();
+        }
+        function SaveReasonableParam() {
+            var paramType_a = $("#paramType_a").val();
+            var paramType_b = $("#paramType_b").val();
+            var paramType_c = $("#paramType_c").val();
+            var paramType_d = $("#paramType_d").val();
+            var paramType_e = $("#paramType_e").val();
+            var querydata = "&paramType_a=" + paramType_a + "&paramType_b=" + paramType_b
+                + "&paramType_c=" + paramType_c + "&paramType_d=" + paramType_d + "&paramType_e=" + paramType_e;
+            $.ajax({
+                type: "GET",
+                url: "../MainHandler.ashx?action=SaveReasonableParam",
+                dataType: 'text',
+                data: encodeURI(querydata),
+                success: function (result) {
+                    if (result != null && result != "") {
+                        if (parseInt(result) > 0) {
+                            alert("设置合理性检测参数成功！");
+                            window.parent.ChangeIframe('ReasonableSchedualInfo');
+                        }
+                        else {
+                            alert("设置合理性检测参数失败，请重新操作！");
+                        }
+                    }
+                }
+            });
+        }
+        function GetReasonableParam() {
+            $.ajax(
+            {
+                type: "GET",
+                url: "../MainHandler.ashx?action=GetReasonableParam",
+                dataType: 'json',
+                success: function (result) {
+                    if (result != null && result != "") {
+                        $("#type_a").html(result.ParamType_A);
+                        $("#type_b").html(result.ParamType_B);
+                        $("#type_c").html(result.ParamType_C);
+                        $("#type_d").html(result.ParamType_D);
+                        $("#type_e").html(result.ParamType_E);
+
+                        $("#paramType_a").val(result.ParamType_A);
+                        $("#paramType_b").val(result.ParamType_B);
+                        $("#paramType_c").val(result.ParamType_C);
+                        $("#paramType_d").val(result.ParamType_D);
+                        $("#paramType_e").val(result.ParamType_E);
+                    }
+                    else {
+                        alert("未查询到数据！");
+                        return false;
+                    }
+                }
+            });
+        }
+        function PrintReasonableSchedual() {
+            exportExcel("reasonableSchedualInfo");
+        }
+        function getExplorer() {
+            if (window.hasOwnProperty("ActiveXObject") == true) {
+                if (!!window.ActiveXObject || "ActiveXObject" in window) {
+                    return 'ie';
+                }
+                if (window.navigator.userAgent.indexOf("MSIE") >= 0) {
+                    return 'ie';
+                }
+            }
+            return 'other';
+        }
+        function exportExcel(tableid) {
+            if (getExplorer() == 'ie') {
+                var trCount = $("#" + tableid).find("tr").length;
+                var curTbl = document.getElementById(tableid);
+                var oXL = new ActiveXObject("Excel.Application");
+                var oWB = oXL.Workbooks.Add();
+                var xlsheet = oWB.Worksheets(1);
+                var sel = document.body.createTextRange();
+                sel.moveToElementText(curTbl);
+                sel.select();
+                sel.execCommand("Copy");
+                xlsheet.Paste();
+                //设置Excel样式
+                xlsheet.Rows(1 + ":" + 2).Font.Size = 10;//字体
+                xlsheet.Rows(3 + ":" + trCount).Font.Size = 9;//字体
+                xlsheet.Columns("A:B").Font.Size = 10;//字体
+                xlsheet.Rows(1 + ":" + 1).Font.Bold = true;//粗体
+                xlsheet.Columns(1).ColumnWidth = 8;//列宽
+                xlsheet.Columns(2).ColumnWidth = 10;
+                xlsheet.Columns("C:AZ").ColumnWidth = 18;
+                xlsheet.Rows(1 + ":" + trCount).RowHeight = 25;//行高
+                xlsheet.Rows(1 + ":" + 1).Interior.ColorIndex = 15;//行背景颜色
+                xlsheet.Rows(1 + ":" + trCount).HorizontalAlignment = 3;//水平居中
+                xlsheet.Rows(1 + ":" + trCount).VerticalAlignment = 2;//垂直居中
+                xlsheet.Rows(1 + ":" + trCount).Borders.Weight = 2;//设置边框样式
+                oXL.Visible = true;
+                try {
+                    var titleName = $("#reasonableTitle").text();
+                    var fname = oXL.Application.GetSaveAsFilename("" + titleName + ".xls", "Excel Spreadsheets (*.xls), *.xls");
+                } catch (e) {
+                    alert("出现异常，异常信息：" + e);
+                } finally {
+                    if (fname != false) {
+                        oWB.SaveAs(fname);
+                    }
+                }
+            }
+            else {
+                alert("请使用IE浏览器！");
+            }
+        }
+    </script>
+</head>
+<body style="min-height:400px;">
+    <div id="insert">
+        <fieldset>
+            <legend><span class="field_leg">排班合理性检测</span></legend>
+            <div class="setreasonableparam">
+                <div class="title_float" style="text-align:left">合理性检测参数设置<span class="close_float" onclick="CloseChange()">×</span></div>
+                <table cellspacing="7">
+                    <tr>
+                        <td>
+                            <ul class="reasonList noneliststyle">
+                                <li>1.连续两天的班次时间间隔小于<input type="text" id="paramType_a" class="miniInput" />小时</li>
+                                <li>2.连续上班条数超过<input type="text" id="paramType_b" class="miniInput" />天</li>
+                                <li>3.连续夜班条数超过<input type="text" id="paramType_c" class="miniInput" />天</li>
+                                <li>4.整月班表中累计最大工时和最小工时差异大于<input type="text" id="paramType_d" class="miniInput" />小时</li>
+                                <li>5.整月班表中累计夜班数量差异个数大于<input type="text" id="paramType_e" class="miniInput" />个</li>
+                            </ul>
+                        </td>
+                    </tr>
+                </table>
+                <div class="footLineBtn_float">
+                    <input type="button" value="保存" class="saveBtn ml_20" onclick="SaveReasonableParam()" />
+                </div>
+            </div>
+            <div>
+                <table class="insert_tb">
+                    <tr>
+                        <td class="width_10 blod" align="right">日期选择：</td>
+                        <td class="width_90">
+                            <input type="text" id="begin_ChooseMonth" class="Wdate ml_40" readonly="readonly" onclick="WdatePicker({ dateFmt: 'yyyy-MM-dd' })" />
+                            <span class="ml_20">至</span>
+                            <input type="text" id="end_ChooseMonth" class="Wdate ml_20" readonly="readonly" onclick="WdatePicker({ dateFmt: 'yyyy-MM-dd' })" />
+                            <input type="button" class="saveBtn ml_100" value="设置参数" onclick="SetReasonableParam()" />
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="2">
+                            <ul class="reasonList">
+                                <li><a href="javascript:void(0)" onclick="CheckReasonableSchedualInfo('a',this)">连续两天的班次时间间隔小于<span id="type_a"></span>小时</a></li>
+                                <li><a href="javascript:void(0)" onclick="CheckReasonableSchedualInfo('b',this)">连续上班条数超过<span id="type_b"></span>天</a></li>
+                                <li><a href="javascript:void(0)" onclick="CheckReasonableSchedualInfo('c',this)">连续夜班条数超过<span id="type_c"></span>天</a></li>
+                                <li><a href="javascript:void(0)" onclick="CheckReasonableSchedualInfo('d',this)">整月班表中累计最大工时和最小工时差异大于<span id="type_d"></span>小时</a></li>
+                                <li><a href="javascript:void(0)" onclick="CheckReasonableSchedualInfo('e',this)">整月班表中累计夜班数量差异个数大于<span id="type_e"></span>个</a></li>
+                            </ul>
+                        </td>
+                    </tr>
+                </table>
+                <div class="lineShow_s"><span id="reasonableTitle"></span><input id="printBtn" type="button" value="导出" class="normalBtn ml_100 display_none" onclick="PrintReasonableSchedual()" /></div>
+                <div id="reasonableSchedualInfo" class="mt_5 mb_20"></div>
+            </div>
+        </fieldset>
+    </div>
+</body>
+</html>

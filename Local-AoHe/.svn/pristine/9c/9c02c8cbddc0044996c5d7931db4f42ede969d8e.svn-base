@@ -1,0 +1,390 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>考核模板管理</title>
+    <meta charset="utf-8" />
+    <script src="../Script/global.js"></script>
+    <link href="../Css/style.css" rel="stylesheet" />
+    <script src="../Script/jquery-1.4.2.min.js"></script>
+    <script src="../times/WdatePicker.js"></script>
+    <script type="text/javascript">
+        $(function () {
+            InitAssessType();
+            InitRank();
+            getPage(1);
+            //设置iframe高度
+            AutoIframeHeight();
+        })
+        var sortfield = "";
+        var sorttype = "";
+        var saveflag = "";
+        function setsort(_sortfield) {
+            if (sortfield != _sortfield) {
+                sorttype = "asc";
+                sortfield = _sortfield;
+            }
+            else {
+                if (sorttype == "asc") {
+                    sorttype = "desc";
+                }
+                else {
+                    sorttype = "asc";
+                }
+            }
+            var currentpage = $("#hid_currentpage").val();
+            getPage(currentpage);
+        }
+        //跳转页面
+        function pagespress() {
+            var k = window.event.keyCode;
+            if ((k == 46) || (k == 8) || (k >= 48 && k <= 57) || (k >= 96 && k <= 105) || (k >= 37 && k <= 40)) {
+            }
+            else if (k == 13) {
+                var topage = $("#txt_topages").val();
+                if (topage != '0') {
+                    if (parseInt(topage, 10) > parseInt($("#hid_totalpage").val(), 10)) {
+                        topage = $("#hid_totalpage").val();
+                        $("#txt_topages").val(topage);
+                    }
+                    getPage(topage);
+                }
+            }
+            else {
+                window.event.returnValue = false;
+            }
+        }
+        //点击GO按钮进行翻页动作
+        function pagespressForGo() {
+            var topage = $("#txt_topages").val();
+            if (topage != '0') {
+                if (parseInt(topage, 10) > parseInt($("#hid_totalpage").val(), 10)) {
+                    topage = $("#hid_totalpage").val();
+                    $("#txt_topages").val(topage);
+                }
+                getPage(topage);
+            }
+        }
+        function getPage(currentpage) {
+            ChangeShowPage('assessTemplate_list', 'assessTemplate_add');
+            var pagesize = "10";
+            var queryRank = $("#queryRank").val();
+            if ($("#sel_pagesize").val() != "" && typeof ($("#sel_pagesize").val()) != "undefined") { pagesize = $("#sel_pagesize").val(); }
+            var querydata = "&queryRank=" + queryRank + "&currentpage=" + currentpage + "&pagesize=" + pagesize + "&sortfield=" + sortfield + "&sorttype=" + sorttype;
+            $.ajax(
+            {
+                type: "GET",
+                url: "../MainHandler.ashx?action=getRecordPage_AssessTemplate",
+                dataType: 'text',
+                data: encodeURI(querydata),
+                success: function (result) {
+                    $("#assessTemplate_tb").html(result);
+                    //设置iframe高度
+                    AutoIframeHeight();
+                }
+            });
+        }
+        function Save() {
+            var ID = $("#ID").val();
+            var rank = $("#rank").val();
+            var assessType = $("#assessType").val();
+            var status = $("#status").val();
+            //验证非空
+            if (rank == "") {
+                alert("请选择职级！");
+                return false;
+            }
+            if (assessType == "") {
+                alert("请选择考核类型！");
+                return false;
+            }
+            if (status == "") {
+                alert("请选择状态！");
+                return false;
+            }
+            var details = [];
+            var flag = true;
+            $("#assessDetail .tr_detail").each(function () {
+                var assessProjectType = $(this).find(".assessProjectType").val();
+                var assessProjectNo = $(this).find(".assessProjectNo").val();
+                var assessProjectName = $(this).find(".assessProjectName").val();
+                var remark = $(this).find(".remark").val();
+                var score = $(this).find(".score").val();
+                if (assessProjectType == "") {
+                    alert("请选择考核项目分类！");
+                    flag = false;
+                    return false;
+                }
+                if (assessProjectNo == "") {
+                    alert("请输入考核项目编号！");
+                    flag = false;
+                    return false;
+                }
+                if (assessProjectName == "") {
+                    alert("请输入考核项目名称！");
+                    flag = false;
+                    return false;
+                }
+                if (score == "") {
+                    alert("请输入标准分数！");
+                    flag = false;
+                    return false;
+                }
+                if (isNaN(score)) {
+                    alert("请输入正确的标准分数！");
+                    flag = false;
+                    return false;
+                }
+                details.push({
+                    "AssessProjectType": assessProjectType,
+                    "AssessProjectNo": assessProjectNo,
+                    "AssessProjectName": assessProjectName,
+                    "Remark": remark,
+                    "Score": score,
+                })
+            });
+            if (flag == false) {
+                return false;
+            }
+            if (details.length < 1) {
+                alert("请添加考核模板明细！");
+                return false;
+            }
+            var querydata = "&details=" + thistoString(details) + "&ID=" + ID + "&status=" + status 
+                + "&assessType=" + assessType + "&rank=" + rank + "&saveflag=" + saveflag;
+            $.ajax(
+            {
+                type: "GET",
+                url: "../MainHandler.ashx?action=SaveAssessTemplate",
+                dataType: 'text',
+                data: encodeURI(querydata),
+                success: function (result) {
+                    if (result != null && result != "") {
+                        if (parseInt(result) > 0) {
+                            alert("保存考核模板成功！");
+                            getPage(1);
+                        }
+                        else if (result == "exists") {
+                            alert("保存重复的考核模板，请重新操作！");
+                        }
+                        else {
+                            alert("保存考核模板失败，请重新操作！");
+                        }
+                    }
+                }
+            });
+        }
+        function GetAssessTemplateInfo(ID) {
+            var querydata = "&ID=" + ID;
+            $.ajax(
+            {
+                type: "GET",
+                url: "../MainHandler.ashx?action=GetAssessTemplateByID",
+                dataType: 'json',
+                data: encodeURI(querydata),
+                success: function (result) {
+                    if (result != null && result != "") {
+                        $("#ID").val(result.ID);
+                        $("#rank").val(result.Rank);
+                        $("#assessType").val(result.AssessType);
+                        $("#status").val(result.Status);
+                        $("#assessDetail tr:gt(0)").remove();
+                        $.each(result.ListAssessTemplateDetail, function (index, item) {
+                            AppendTrDetail(item);
+                        });
+                    }
+                    else {
+                        alert("未查询到数据！");
+                        return false;
+                    }
+                }
+            });
+        }
+        function ChangeShowPage(showID, hideID) {
+            $("#" + showID).show();
+            $("#" + hideID).hide();
+            //设置iframe高度
+            AutoIframeHeight();
+        }
+        function ShowInsertPage(flag, ID) {
+            saveflag = flag;
+            if (saveflag == "add") {
+                $("#assessTemplate_add .normalInput").val('');
+                $("#assessTemplate_add .normalSelect").val('');
+                $("#assessTemplate_add .notallow_edit").attr("disabled", false);
+                $("#assessDetail tr:gt(0)").remove();
+                AppendTrDetail();
+            }
+            if (saveflag == "edit") {
+                GetAssessTemplateInfo(ID);
+                $("#assessTemplate_add .notallow_edit ").attr("disabled", true);
+            }
+            ChangeShowPage('assessTemplate_add', 'assessTemplate_list')
+        }
+        function DeleteAssessTemplate(ID) {
+            if (confirm("确认删除模板吗？")) {
+                var querydata = "&ID=" + ID;
+                $.ajax(
+                {
+                    type: "GET",
+                    url: "../MainHandler.ashx?action=DeleteAssessTemplate",
+                    dataType: 'text',
+                    data: encodeURI(querydata),
+                    success: function (result) {
+                        if (result != null && result != "") {
+                            if (parseInt(result) > 0) {
+                                alert("删除考核模板成功！");
+                                getPage(1);
+                            }
+                            else {
+                                alert("删除考核模板异常，请重新操作！");
+                            }
+                        }
+                    }
+                });
+            }
+        }
+        function InitAssessType() {
+            $("#assessType").empty();
+            $.ajax(
+           {
+               type: "GET",
+               url: "../MainHandler.ashx?action=InitSelect_AssessType",
+               dataType: 'text',
+               success: function (result) {
+                   if (result != null && result != "" && result.length > 0) {
+                       $("#assessType").append(result);
+                   }
+               }
+           });
+        }
+        function InitRank() {
+            $("#queryRank").empty();
+            $("#rank").empty();
+            $.ajax(
+           {
+               type: "GET",
+               async: false,
+               url: "../MainHandler.ashx?action=InitSelect_Rank",
+               dataType: 'text',
+               success: function (result) {
+                   if (result != null && result != "" && result.length > 0) {
+                       $("#queryRank").append(result);
+                       $("#rank").append(result);
+                   }
+               }
+           });
+        }
+        function GetAssessProjectType() {
+            var selectObj = "<select class='assessProjectType editSelect'>";
+            $.ajax({
+               type: "GET",
+               async: false,
+               url: "../MainHandler.ashx?action=InitSelect_AssessProjectType",
+               dataType: 'text',
+               success: function (result) {
+                   if (result != null && result != "" && result.length > 0) {
+                       selectObj += result;
+                       selectObj += "</select>";
+                   }
+               }
+           });
+            return selectObj;
+        }
+        function AppendTrDetail(obj) {
+            var html = $("<tr class='tr_detail'><td>" + GetAssessProjectType() + "</td>"
+            + "<td><input class='assessProjectNo editInput' type='text' /></td>"
+            + "<td><input class='assessProjectName editInput' type='text' /></td>"
+            + "<td><input class='remark editInput'  type='text' /></td>"
+            + "<td><input class='score editInput'  type='text' /></td>"
+            + "<td><a href=\"javascript:void(0)\" onclick='DeleteDetail(this)'>删除</a></td></tr>");
+            if (obj) {
+                html.find(".assessProjectType").val(obj.AssessProjectType);
+                html.find(".assessProjectNo").val(obj.AssessProjectNo);
+                html.find(".assessProjectName").val(obj.AssessProjectName);
+                html.find(".remark").val(obj.Remark);
+                html.find(".score").val(obj.Score);
+            }
+            $("#assessDetail").append(html);
+            AutoIframeHeight();
+        }
+        function DeleteDetail(obj) {
+            $(obj).parent().parent().remove();
+        }
+        function AutoIframeHeight() {
+            //设置iframe高度
+            var iframeHeight = $("#iframInfo", window.parent.document).contents().find("body").height();
+            $("#iframInfo", window.parent.document).height(iframeHeight);
+        }
+    </script>
+</head>
+<body>
+    <div id="assessTemplate_list">
+        <fieldset>
+            <legend><span class="field_leg">考核模板</span></legend>
+            <div class="select_where">
+                <span>名称搜索：</span>
+                <select id="queryRank" class="normalSelect">
+                </select>
+                <span class="ml_50"><input class="selectBtn" type="button" value="查询" onclick="getPage(1)" /></span>
+                <span class="ml_50"><input class="selectBtn" type="button" value="新增" onclick="ShowInsertPage('add')" /></span>
+            </div>
+            <div id="assessTemplate_tb">
+            </div>
+        </fieldset>
+    </div>
+    <div id="assessTemplate_add" style="display:none">
+        <fieldset>
+            <legend><span class="field_leg">考核模板信息录入</span></legend>
+            <div>
+                <table class="insert_tb" cellpadding="5" cellspacing="5">
+                    <tr>
+                        <td>职级：</td>
+                        <td>
+                            <select id="rank" class="normalSelect">
+                            </select>
+                            <input type="hidden" id="ID" />
+                        </td>
+                        <td>考核类型：</td>
+                        <td>
+                            <select id="assessType" class="normalSelect">
+                            </select>
+                        </td>
+                        <td>状态：</td>
+                        <td>
+                            <select id="status" class="normalSelect">
+                                <option value="">请选择</option>
+                                <option value="1">有效</option>
+                                <option value="0">停用</option>
+                            </select>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="font_weight">考核项目明细：</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                        <td align="right"><a class="alink" onclick="AppendTrDetail()" href="javascript:void(0)">新增明细</a></td>
+                    </tr>
+                </table>
+                <div style="clear:both"></div>
+                <table id="assessDetail" class="insert_tb list_tb_edit mt_20" cellpadding="0" cellspacing="0">
+                    <tr>
+                        <th style="width:20%">考核项目分类</th>
+                        <th style="width:10%">考核项目编号</th>
+                        <th style="width:25%">考核项目名称</th>
+                        <th style="width:25%">考核项目说明</th>
+                        <th style="width:10%">分数</th>
+                        <th style="width:10%">操作</th>
+                    </tr>
+                </table>
+                <div class="footLineBtn">
+                    <input type="button" value="返回" class="saveBtn" onclick="ChangeShowPage('assessTemplate_list','assessTemplate_add')" />
+                    <input type="button" value="保存" class="saveBtn ml_20" onclick="Save()" />
+                </div>
+            </div>
+        </fieldset>
+    </div>
+</body>
+</html>

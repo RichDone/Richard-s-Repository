@@ -1,0 +1,149 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>上海奥和投资</title>
+    <meta charset="utf-8" />
+    <link href="Css/style.css" rel="stylesheet" />
+    <script src="Script/jquery-1.4.2.min.js"></script>
+    <script type="text/javascript">
+        function ChangeIframe(url, param) {
+            if (param) {
+                $("#iframInfo").attr("src", "SubPage/" + url + ".html?new=" + Math.random() + "&" + param);
+            }
+            else {
+                $("#iframInfo").attr("src", "SubPage/" + url + ".html?new=" + Math.random());
+            }
+            var iframeHeight = $("#iframInfo").contents().find("body").height();
+            $("#iframInfo").height(iframeHeight);
+        }
+        $(function () {
+            $("#menu .ul_hor li").mousemove(function () {
+                $(this).find(".ul_ver").show();
+            }).mouseout(function () {
+                $(this).find(".ul_ver").hide();
+            });
+        })
+    </script>
+    <style type="text/css">
+        /*body {
+            margin: 0;
+            font-family: '微软雅黑','Times New Roman', Times, serif;
+        }*/
+
+        .navi_head {
+            height: 30px;
+            background-color: #BDD2FF;
+        }
+
+        .navi_body {
+            margin: 0 auto;
+            overflow: hidden;
+            height: 30px;
+            background-color: #FFF8DC;
+            z-index: 2;
+            position: absolute;
+            border: 1px solid #a0afc3;
+            left:11%;
+        }
+
+            .navi_body:hover {
+                height: 190px;
+            }
+
+        .navi_head > div > span {
+            width: 120px;
+            text-align: center;
+            height: 190px;
+            display: inline-block;
+            font-weight: bold;
+            font-size: 14px;
+            vertical-align: top;
+            color: black;
+        }
+
+        .navi_title {
+            font-size: 15px;
+            line-height: 30px;
+            margin-top: 0;
+        }
+
+        .navi_head > div > span:hover {
+            background: rgba(100,100,100,0.2);
+        }
+
+        .navi_head > div > span > p a {
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="wrap">
+        <div class="head">
+            <div class="lineShow">上海奥和投资管理有限公司</div>
+            <div class="navi_body">
+                <div class="navi_head">
+                    <div>
+                        <span>
+                            <p class="navi_title">事件模块<font face="webdings" size="3">6</font></p>
+                            <p><a href="javascript:void(0)" onclick="ChangeIframe('AddAccident')">意外事件录入</a></p>
+                            <p><a href="javascript:void(0)" onclick="ChangeIframe('Accident')">意外事件查询</a></p>
+                            <p><a href="javascript:void(0)" onclick="ChangeIframe('AccidentStats')">意外事件统计</a></p>
+                        </span>
+                        <span>
+                            <p class="navi_title">巡视记录<font face="webdings" size="3">6</font></p>
+                            <p><a href="javascript:void(0)" onclick="ChangeIframe('AddDailyRecord')">录入</a></p>
+                            <p><a href="javascript:void(0)" onclick="ChangeIframe('DailyRecord')">记录查看</a></p>
+                            <p><a href="javascript:void(0)" onclick="ChangeIframe('DailyRecordStats')">日常记录统计</a></p>
+                        </span>
+                        
+                        <span>
+                            <p class="navi_title">客人信息<font face="webdings" size="3">6</font></p>
+                            <p><a href="javascript:void(0)" onclick="ChangeIframe('Guest')">客人信息管理</a></p>
+                            <p><a href="javascript:void(0)" onclick="ChangeIframe('GuestConnection')">客人关系</a></p>
+                        </span>
+                        <span>
+                            <p class="navi_title">员工信息<font face="webdings" size="3">6</font></p>
+                            <p><a href="javascript:void(0)" onclick="ChangeIframe('StaffManage')">员工信息管理</a></p>
+                            <p><a href="javascript:void(0)" onclick="ChangeIframe('StaffConnection')">员工人脉</a></p>
+                            <p><a href="javascript:void(0)" onclick="ChangeIframe('StaffLeave')">员工请假</a></p>
+                        </span>
+                        <span>
+                            <p class="navi_title">员工考评<font face="webdings" size="3">6</font></p>
+                            <p><a href="javascript:void(0)" onclick="ChangeIframe('AddStaffEvaluate')">个人事件录入</a></p>
+                            <p><a href="javascript:void(0)" onclick="ChangeIframe('StaffEvaluate')">个人事件查询</a></p>
+                            <p><a href="javascript:void(0)" onclick="ChangeIframe('StaffAssess')">员工绩效考核</a></p>
+                            <p><a href="javascript:void(0)" onclick="ChangeIframe('AssessTemplate')">考核模板</a></p>
+                        </span>
+                        <span>
+                            <p class="navi_title">排班管理<font face="webdings" size="3">6</font></p>
+                            <p><a href="javascript:void(0)" onclick="ChangeIframe('Schedual')">排班信息</a></p>
+                            <p><a href="javascript:void(0)" onclick="ChangeIframe('AddSchedual')">添加排班</a></p>
+                            <p><a href="javascript:void(0)" onclick="ChangeIframe('SchedualTemplate')">排班模板维护</a></p>
+                            <p><a href="javascript:void(0)" onclick="ChangeIframe('RoomCombine')">房间组合维护</a></p>
+                            <p><a href="javascript:void(0)" onclick="ChangeIframe('SchedualTime')">班次维护</a></p>
+                        </span>
+                        <span>
+                            <p class="navi_title">工时管理<font face="webdings" size="3">6</font></p>
+                            <p><a href="javascript:void(0)" onclick="ChangeIframe('OtherWorkTime')">其他工时</a></p>
+                            <p><a href="javascript:void(0)" onclick="ChangeIframe('SchedualCount')">员工工时统计</a></p>
+                        </span>
+                        <span>
+                            <p class="navi_title">基础信息维护<font face="webdings" size="3">6</font></p>
+                            <p><a href="javascript:void(0)" onclick="ChangeIframe('FloorManage')">楼层维护</a></p>
+                            <p><a href="javascript:void(0)" onclick="ChangeIframe('RoomManage')">房间维护</a></p>
+                            <p><a href="javascript:void(0)" onclick="ChangeIframe('BasicInfoManage')">基础信息维护</a></p>
+                            <p><a href="javascript:void(0)" onclick="ChangeIframe('PostInfoManage')">岗位维护</a></p>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="main mt_50">
+            <iframe id="iframInfo" class="iframe" scrolling="no" frameborder="0" src="SubPage/DailyRecord.html"></iframe>
+        </div>
+        <div class="footer">
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,547 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>员工信息管理</title>
+    <meta charset="utf-8" />
+    <script src="../Script/global.js"></script>
+    <link href="../Css/style.css" rel="stylesheet" />
+    <script src="../Script/jquery-1.4.2.min.js"></script>
+    <script src="../times/WdatePicker.js"></script>
+    <script type="text/javascript">
+        $(function () {
+            InitPostLevel();
+            InitStaffInfo();
+            InitRank();
+            InitSkillLevel();
+            InitEducation();
+            getPage(1);
+            //设置iframe高度
+            var iframeHeight = $("#iframInfo", window.parent.document).contents().find("body").height();
+            $("#iframInfo", window.parent.document).height(iframeHeight);
+        })
+        var sortfield = "";
+        var sorttype = "";
+        var saveflag = "";
+        function setsort(_sortfield) {
+            if (sortfield != _sortfield) {
+                sorttype = "asc";
+                sortfield = _sortfield;
+            }
+            else {
+                if (sorttype == "asc") {
+                    sorttype = "desc";
+                }
+                else {
+                    sorttype = "asc";
+                }
+            }
+            var currentpage = $("#hid_currentpage").val();
+            getPage(currentpage);
+        }
+        //跳转页面
+        function pagespress() {
+            var k = window.event.keyCode;
+            if ((k == 46) || (k == 8) || (k >= 48 && k <= 57) || (k >= 96 && k <= 105) || (k >= 37 && k <= 40)) {
+            }
+            else if (k == 13) {
+                var topage = $("#txt_topages").val();
+                if (topage != '0') {
+                    if (parseInt(topage, 10) > parseInt($("#hid_totalpage").val(), 10)) {
+                        topage = $("#hid_totalpage").val();
+                        $("#txt_topages").val(topage);
+                    }
+                    getPage(topage);
+                }
+            }
+            else {
+                window.event.returnValue = false;
+            }
+        }
+        //点击GO按钮进行翻页动作
+        function pagespressForGo() {
+            var topage = $("#txt_topages").val();
+            if (topage != '0') {
+                if (parseInt(topage, 10) > parseInt($("#hid_totalpage").val(), 10)) {
+                    topage = $("#hid_totalpage").val();
+                    $("#txt_topages").val(topage);
+                }
+                getPage(topage);
+            }
+        }
+        function getPage(currentpage, queryExpire) {
+            ChangeShowPage('staff_list', 'staff_add');
+            var pagesize = "10";
+            var queryName = $("#queryName").val();
+            var queryStaffOtherNo = $("#queryStaffOtherNo").val();
+            var querySex = $("#querySex").val();
+            var queryPostLevel = $("#queryPostLevel").val();
+            var querySkillLevel = $("#querySkillLevel").val();
+            var queryStatus = $("#queryStatus").val();
+            if ($("#sel_pagesize").val() != "" && typeof ($("#sel_pagesize").val()) != "undefined") { pagesize = $("#sel_pagesize").val(); }
+            var querydata = "&queryStaffOtherNo=" + queryStaffOtherNo + "&queryName=" + queryName + "&querySex=" + querySex + "&queryPostLevel=" + queryPostLevel
+                + "&querySkillLevel=" + querySkillLevel + "&queryStatus=" + queryStatus
+                + "&currentpage=" + currentpage + "&pagesize=" + pagesize + "&sortfield=" + sortfield + "&sorttype=" + sorttype;
+            if (queryExpire) {
+                querydata += "&queryExpire=" + queryExpire;
+            }
+            $.ajax(
+            {
+                type: "GET",
+                url: "../MainHandler.ashx?action=getRecordPage_StaffInfo",
+                dataType: 'text',
+                data: encodeURI(querydata),
+                success: function (result) {
+                    $("#staff_tb").html(result);
+                    //设置iframe高度
+                    var iframeHeight = $("#iframInfo", window.parent.document).contents().find("body").height();
+                    $("#iframInfo", window.parent.document).height(iframeHeight);
+                }
+            });
+        }
+        function Save() {
+            var ID = $("#ID").val();
+            var name = $("#name").val();
+            var sex = $("#sex").val();
+            var IDCardNo = $("#IDCardNo").val();
+            var staffOtherNo = $("#staffOtherNo").val();
+            var postLevel = $("#postLevel").val();
+            var status = $("#status").val();
+            var masterStaffNo = $("#masterStaffNo").val();
+            var hireDate = $("#hireDate").val();
+            var regularDate = $("#regularDate").val();
+            var leaveDate = $("#leaveDate").val();
+            var rank = $("#rank").val();
+
+            var education = $("#education").val();
+            var skillLevel = $("#skillLevel").val();
+            var phone = $("#phone").val();
+            var emergencyContactName = $("#emergencyContactName").val();
+            var emergencyContactPhone = $("#emergencyContactPhone").val();
+            var healthCardDate = $("#healthCardDate").val();
+            var nurseCardLevel = $("#nurseCardLevel").val();
+            var nurseCardDate = $("#nurseCardDate").val();
+            var contractDate = $("#contractDate").val();
+            var noCrimeProof = $("#noCrimeProof").val();
+
+            var formData = new FormData(); //var formData = new FormData($('form')[0]);
+            ///get the file and append it to the FormData object
+            formData.append('file', $('#noCrimeProof')[0].files[0]);
+
+            //验证非空
+            if (name == "") {
+                alert("请输入姓名！");
+                return false;
+            }
+            if (IDCardNo == "") {
+                alert("请输入身份证号！");
+                return false;
+            }
+            if (postLevel == "") {
+                alert("请选择岗位！");
+                return false;
+            }
+            if (rank == "") {
+                alert("请选择职级！");
+                return false;
+            }
+            if (status == "") {
+                alert("请选择状态！");
+                return false;
+            }
+            if (hireDate == "") {
+                alert("请选择入职日期！");
+                return false;
+            }
+            var querydata = "&ID=" + ID + "&name=" + name + "&sex=" + sex + "&IDCardNo=" + IDCardNo + "&postLevel=" + postLevel
+                + "&saveflag=" + saveflag + "&rank=" + rank + "&masterStaffNo=" + masterStaffNo + "&hireDate=" + hireDate
+                + "&regularDate=" + regularDate + "&status=" + status + "&leaveDate=" + leaveDate
+                + "&education=" + education + "&skillLevel=" + skillLevel + "&phone=" + phone + "&staffOtherNo=" + staffOtherNo
+                + "&emergencyContactName=" + emergencyContactName + "&emergencyContactPhone=" + emergencyContactPhone
+                + "&healthCardDate=" + healthCardDate + "&nurseCardLevel=" + nurseCardLevel + "&nurseCardDate=" + nurseCardDate
+                + "&contractDate=" + contractDate + "&noCrimeProof=" + noCrimeProof;
+            var nowAction = $("#uploadForm").attr("action");
+            $("#uploadForm").attr("action", nowAction + querydata);
+            return true;
+            //$.ajax(
+            //{
+            //    type: "POST",
+            //    url: "../MainHandler.ashx?action=SaveStaff",
+            //    dataType: 'text',
+            //    data: encodeURI(querydata),
+            //    success: function (result) {
+            //        if (result != null && result != "") {
+            //            if (parseInt(result) > 0) {
+            //                alert("保存员工成功！");
+            //                getPage(1);
+            //            }
+            //            else {
+            //                alert("保存员工失败，请重新操作！");
+            //            }
+            //        }
+            //    }
+            //});
+        }
+        function GetStaffInfoByID(ID) {
+            var querydata = "&ID=" + ID;
+            $.ajax(
+            {
+                type: "GET",
+                url: "../MainHandler.ashx?action=GetStaffInfoByID",
+                dataType: 'json',
+                data: encodeURI(querydata),
+                success: function (result) {
+                    if (result != null && result != "") {
+                        $("#ID").val(result.ID);
+                        $("#name").val(result.Name);
+                        $("#sex").val(result.Sex);
+                        $("#IDCardNo").val(result.IDCardNo);
+                        $("#staffOtherNo").val(result.StaffOtherNo);
+                        $("#postLevel").val(result.PostLevel);
+                        $("#masterStaffNo").val(result.MasterStaffNo);
+                        $("#status").val(result.Status);
+                        $("#rank").val(result.Rank);
+
+                        $("#education").val(result.Education);
+                        $("#skillLevel").val(result.SkillLevel);
+                        $("#phone").val(result.Phone);
+                        $("#emergencyContactName").val(result.EmergencyContactName);
+                        $("#emergencyContactPhone").val(result.EmergencyContactPhone);
+                        $("#nurseCardLevel").val(result.NurseCardLevel);
+                        if (result.NurseCardDate != null && result.NurseCardDate != "") {
+                            var nurseCardDate = new Date(parseInt(result.NurseCardDate.substr(6))).ToString("yyyy-MM-dd");
+                            $("#nurseCardDate").val(nurseCardDate);
+                        }
+                        else {
+                            $("#nurseCardDate").val("");
+                        }
+                        if (result.ContractDate != null && result.ContractDate != "") {
+                            var contractDate = new Date(parseInt(result.ContractDate.substr(6))).ToString("yyyy-MM-dd");
+                            $("#contractDate").val(contractDate);
+                        }
+                        else {
+                            $("#contractDate").val("");
+                        }
+                        if (result.HealthCardDate != null && result.HealthCardDate != "") {
+                            var healthCardDate = new Date(parseInt(result.HealthCardDate.substr(6))).ToString("yyyy-MM-dd");
+                            $("#healthCardDate").val(healthCardDate);
+                        }
+                        else {
+                            $("#healthCardDate").val("");
+                        }
+                        //无犯罪记录证明
+                        if (result.NoCrimeProof != null && result.NoCrimeProof != "") {
+                            $("#showNoCrimeProof").show();
+                            $("#showNoCrimeProof").unbind('click').click(function () {
+                                window.open("..//Pictures/" + result.NoCrimeProof, '_blank');
+                            });
+                        }
+
+                        if (result.LeaveDate != null && result.LeaveDate != "") {
+                            var leaveDate = new Date(parseInt(result.LeaveDate.substr(6))).ToString("yyyy-MM-dd");
+                            $("#leaveDate").val(leaveDate);
+                        }
+                        else {
+                            $("#leaveDate").val("");
+                        }
+                        if (result.HireDate != null && result.HireDate != "") {
+                            var hireDate = new Date(parseInt(result.HireDate.substr(6))).ToString("yyyy-MM-dd");
+                            $("#hireDate").val(hireDate);
+                        }
+                        else {
+                            $("#hireDate").val("");
+                        }
+                        if (result.RegularDate != null && result.RegularDate != "") {
+                            var regularDate = new Date(parseInt(result.RegularDate.substr(6))).ToString("yyyy-MM-dd");
+                            $("#regularDate").val(regularDate);
+                        }
+                        else {
+                            $("#regularDate").val("");
+                        }
+                    }
+                    else {
+                        alert("未查询到数据！");
+                        return false;
+                    }
+                }
+            });
+        }
+        function InitPostLevel() {
+            $("#postLevel").empty();
+            $("#queryPostLevel").empty();
+            $.ajax(
+           {
+               type: "GET",
+               url: "../MainHandler.ashx?action=InitSelect_PostLevel",
+               dataType: 'text',
+               success: function (result) {
+                   if (result != null && result != "" && result.length > 0) {
+                       $("#postLevel").append(result);
+                       $("#queryPostLevel").append(result);
+                   }
+               }
+           });
+        }
+        function InitStaffInfo() {
+            $("#masterStaffNo").empty();
+            $.ajax(
+           {
+               type: "GET",
+               url: "../MainHandler.ashx?action=InitSelect_StaffInfo",
+               dataType: 'text',
+               success: function (result) {
+                   if (result != null && result != "" && result.length > 0) {
+                       $("#masterStaffNo").append(result);
+                   }
+               }
+           });
+        }
+        function ChangeShowPage(showID, hideID) {
+            $("#" + showID).show();
+            $("#" + hideID).hide();
+            //设置iframe高度
+            var iframeHeight = $("#iframInfo", window.parent.document).contents().find("body").height();
+            $("#iframInfo", window.parent.document).height(iframeHeight);
+        }
+        function ShowInsertPage(flag, ID) {
+            saveflag = flag;
+            if (saveflag == "add") {
+                $("#staff_add .normalInput").val('');
+                $("#staff_add .normalSelect").val('');
+                $("#leaveDate").val("");
+                $("#noCrimeProof").val("");
+                $("#showNoCrimeProof").hide();
+                $("#staff_add .notallow_edit").attr("disabled", false);
+            }
+            if (saveflag == "edit") {
+                GetStaffInfoByID(ID);
+                $("#noCrimeProof").val("");
+                $("#staff_add .notallow_edit ").attr("disabled", true);
+            }
+            ChangeShowPage('staff_add', 'staff_list')
+        }
+        function InitRank() {
+            $("#rank").empty();
+            var querydata = "&paramType=Rank";
+            $.ajax(
+           {
+               type: "GET",
+               async: false,
+               url: "../MainHandler.ashx?action=InitSelect_ParamOption",
+               dataType: 'text',
+               data: encodeURI(querydata),
+               success: function (result) {
+                   if (result != null && result != "" && result.length > 0) {
+                       $("#rank").append(result);
+                   }
+               }
+           });
+        }
+        function InitSkillLevel() {
+            $("#skillLevel").empty();
+            $("#querySkillLevel").empty();
+            var querydata = "&paramType=SkillLevel";
+            $.ajax(
+           {
+               type: "GET",
+               async: false,
+               url: "../MainHandler.ashx?action=InitSelect_ParamOption",
+               dataType: 'text',
+               data: encodeURI(querydata),
+               success: function (result) {
+                   if (result != null && result != "" && result.length > 0) {
+                       $("#skillLevel").append(result);
+                       $("#querySkillLevel").append(result);
+                   }
+               }
+           });
+        }
+        function InitEducation() {
+            $("#education").empty();
+            var querydata = "&paramType=Education";
+            $.ajax(
+           {
+               type: "GET",
+               async: false,
+               url: "../MainHandler.ashx?action=InitSelect_ParamOption",
+               dataType: 'text',
+               data: encodeURI(querydata),
+               success: function (result) {
+                   if (result != null && result != "" && result.length > 0) {
+                       $("#education").append(result);
+                   }
+               }
+           });
+        }
+        function ExportStaffInfo() {
+            var queryName = $("#queryName").val();
+            var querySex = $("#querySex").val();
+            var queryPostLevel = $("#queryPostLevel").val();
+            var querySkillLevel = $("#querySkillLevel").val();
+            var queryStatus = $("#queryStatus").val();
+            var querydata = "&queryName=" + queryName + "&querySex=" + querySex + "&queryPostLevel=" + queryPostLevel
+                + "&querySkillLevel=" + querySkillLevel + "&queryStatus=" + queryStatus
+            window.location.href = "../MainHandler.ashx?action=ExportStaffInfo" + querydata;
+        }
+    </script>
+</head>
+<body>
+    <form enctype="multipart/form-data" action="..//MainHandler.ashx?action=SaveStaff" id="uploadForm" method="post">
+        <div id="staff_list">
+            <fieldset>
+                <legend><span class="field_leg">员工查询</span></legend>
+                <div class="select_where">
+                    <span>姓名搜索：</span>
+                    <input type="text" id="queryName" class="normalInput" />
+                    <span class="ml_20">性别：</span>
+                    <select id="querySex" class="normalSelect">
+                        <option value="">全部</option>
+                        <option value="0">男</option>
+                        <option value="1">女</option>
+                    </select>
+                    <span class="ml_20">工号搜索：</span>
+                    <input type="text" id="queryStaffOtherNo" class="normalInput" />
+                    <span class="ml_20">岗位：</span>
+                    <select id="queryPostLevel" class="normalSelect"></select>
+                    <div class="mt_20"></div>
+                    <span>技能等级：</span>
+                    <select id="querySkillLevel" class="normalSelect"></select>
+                    <span class="ml_20">状态：</span>
+                    <select id="queryStatus" class="normalSelect">
+                        <option value="">请选择</option>
+                        <option value="0">试用</option>
+                        <option value="1">转正</option>
+                        <option value="2">离职</option>
+                    </select>
+                    <span class="ml_20"><input class="selectBtn" type="button" value="查询" onclick="getPage(1)" /></span>
+                    <span class="ml_20"><input class="selectBtn" type="button" value="新增" onclick="ShowInsertPage('add')" /></span>
+                    <div class="mt_20"></div>
+                    <span class="ml_450"><input class="biggerSelectBtn" type="button" value="健康证一月内到期" onclick="getPage(1, 'healthCardDate')" /></span>
+                    <span class="ml_20"><input class="bigSelectBtn" type="button" value="合同一月内到期" onclick="getPage(1, 'contractDate')" /></span>
+                    <span class="ml_20"><input class="bigSelectBtn" type="button" value="导出到Excel" onclick="ExportStaffInfo()" /></span>
+                </div>
+                <div id="staff_tb">
+                </div>
+            </fieldset>
+        </div>
+        <div id="staff_add" style="display:none">
+            <fieldset>
+                <legend><span class="field_leg">员工录入</span></legend>
+                <div>
+                    <table class="insert_tb" cellpadding="5" cellspacing="5">
+                        <tr>
+                            <td>姓名：</td>
+                            <td>
+                                <input type="text" id="name" class="normalInput notallow_edit" />
+                                <input type="hidden" id="ID" />
+                            </td>
+                            <td>性别：</td>
+                            <td>
+                                <select id="sex" class="normalSelect">
+                                    <option value="0">男</option>
+                                    <option value="1">女</option>
+                                </select>
+                            </td>
+                            <td>员工编号：</td>
+                            <td><input type="text" id="staffOtherNo" class="normalInput" /></td>
+                        </tr>
+                        <tr>
+                            <td>身份证号：</td>
+                            <td><input type="text" id="IDCardNo" class="normalInput notallow_edit" /></td>
+                            <td>岗位：</td>
+                            <td><select id="postLevel" class="normalSelect"></select></td>
+                            <td>带教师傅：</td>
+                            <td>
+                                <select id="masterStaffNo" class="normalSelect"></select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>状态：</td>
+                            <td>
+                                <select id="status" class="normalSelect">
+                                    <option value="">请选择</option>
+                                    <option value="0">试用</option>
+                                    <option value="1">转正</option>
+                                    <option value="2">离职</option>
+                                </select>
+                            </td>
+                            <td>学历：</td>
+                            <td>
+                                <select id="education" class="normalSelect"></select>
+                            </td>
+                            <td>职级：</td>
+                            <td>
+                                <select id="rank" class="normalSelect"></select>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>技能等级：</td>
+                            <td>
+                                <select id="skillLevel" class="normalSelect"></select>
+                            </td>
+                            <td>入职日期：</td>
+                            <td>
+                                <input type="text" id="hireDate" class="Wdate" readonly="readonly" onclick="WdatePicker({ dateFmt: 'yyyy-MM-dd' })" />
+                            </td>
+                            <td>转正日期：</td>
+                            <td>
+                                <input type="text" id="regularDate" class="Wdate" readonly="readonly" onclick="WdatePicker({ dateFmt: 'yyyy-MM-dd' })" />
+                            </td>
+
+                        </tr>
+                        <tr>
+                            <td>离职日期：</td>
+                            <td>
+                                <input type="text" id="leaveDate" class="Wdate" readonly="readonly" onclick="WdatePicker({ dateFmt: 'yyyy-MM-dd' })" />
+                            </td>
+                            <td>联系电话：</td>
+                            <td>
+                                <input type="text" id="phone" class="normalInput" />
+                            </td>
+                            <td>紧急联络人姓名：</td>
+                            <td>
+                                <input type="text" id="emergencyContactName" class="normalInput" />
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>紧急联络人电话：</td>
+                            <td>
+                                <input type="text" id="emergencyContactPhone" class="normalInput" />
+                            </td>
+                            <td>护理证级别：</td>
+                            <td>
+                                <input type="text" id="nurseCardLevel" class="normalInput" />
+                            </td>
+                            <td>护理证日期：</td>
+                            <td>
+                                <input type="text" id="nurseCardDate" class="Wdate" readonly="readonly" onclick="WdatePicker({ dateFmt: 'yyyy-MM-dd' })" />
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>健康证日期：</td>
+                            <td>
+                                <input type="text" id="healthCardDate" class="Wdate" readonly="readonly" onclick="WdatePicker({ dateFmt: 'yyyy-MM-dd' })" />
+                            </td>
+                            <td>员工合同日期：</td>
+                            <td>
+                                <input type="text" id="contractDate" class="Wdate" readonly="readonly" onclick="WdatePicker({ dateFmt: 'yyyy-MM-dd' })" />
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>无犯罪记录证明：</td>
+                            <td colspan="3">
+                                <input id="showNoCrimeProof" class="selectBtn display_none" type="button" value="查看" onclick="showNoCrimeProof()" />
+                                <input type="file" id="noCrimeProof" name="noCrimeProof" class="largeInput" />
+                            </td>
+                        </tr>
+                    </table>
+                    <div class="footLineBtn">
+                        <input type="button" value="返回" class="saveBtn" onclick="ChangeShowPage('staff_list', 'staff_add')" />
+                        <input type="submit" value="保存" class="saveBtn ml_20" onclick="return Save()" />
+                    </div>
+                </div>
+            </fieldset>
+        </div>
+    </form>
+</body>
+</html>
